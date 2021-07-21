@@ -17,6 +17,10 @@ rem ==========================================================================
     use java.util.HashMap
     use java.util.stream.Collectors
     use java.util.Vector
+    use java.nio.file.Files
+    use java.nio.file.Paths
+    use java.nio.file.FileSystems
+    use java.nio.file.attribute.PosixFilePermissions 
 
     use ::adc_updatexmlfiles.aon::UpdateSyncXmlFiles
     use ::ado_CdfMassager.aon::CdfMassager
@@ -29,6 +33,8 @@ rem ==========================================================================
     seterr std_error
 
 rem --- Initializations
+
+    osIsWindows!=(new String(info(0,0)).indexOf("Win"))>=0
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
     dir_syp$=stbl("+DIR_SYP")
@@ -104,6 +110,19 @@ rem --- Is this a restart after resolving Git conflicts?
     restart_dev=unt
     open(restart_dev,err=*next)restartFile$; restart=1
     if restart then
+        rem --- Before going further, verify addon.syn wasn't committed with 
+        rem --- with unmerged changes. This can cause a situation that overwrites 
+        rem --- the previous installation
+        repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
+        if repoInterface!.fileContains(newAonDir$+"/config/addon.syn","<<<<") then 
+            rem --- There are files with embedded conflicts in the directory (Git might have them marked as resolved.) 
+            msg_id$="AD_RESOLVE_CONFLICTS"
+            gosub disp_message
+            print(log_dev)"***** ERROR: config/addon.syn and possibly other files in the upgraded instance contain conflicts. Please resolve the conflicts before proceeding.  *****"
+         release
+    endif 
+        
+    
         rem --- Verify correct restart file
         read(restart_dev,end=*endif)text$
         if pos(restartFile$=text$) then
@@ -653,7 +672,15 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
    
    rem --- --- close the table we're about to copy over
    call stbl("+DIR_SYP")+"/bac_open_table.bbj","ADX_GIT_AUTH","C",rd_table_chans$[all],chan,template$,msg$
-   Files.copy(new File(adx_git_auth_table$).toPath(),new File(adx_git_auth_copy$).toPath(),null())
+   
+   rem --- --- Create an array of copy options and go ahead and copy over if exists
+   rem --- --- Created copyOptionsArray to avoid getting an Object array that that can't be cast to a
+   rem --- --- StandardCopyOptions array. 
+   copyOptions!=BBjAPI().makeVector() 
+   copyOptions!.add(StandardCopyOption.REPLACE_EXISTING)
+   copyOptionsArray!=Array.newInstance(StandardCopyOption.class,1)
+   copyOptions!.toArray(CopyOptionsArray!)   
+   Files.copy(new File(adx_git_auth_table$).toPath(),new File(adx_git_auth_copy$).toPath(),copyOptionsArray!) 
    
 
 done: rem --- All done
@@ -992,6 +1019,21 @@ cloneGitRepo: rem --- Clone Git repository and switch/checkout to old branch/tag
     rem --- Clone Git repository and checkout branch
     cloneDir$=newAonDir$
     cloneDir!=new File(cloneDir$)
+    base_dir!=Paths.get(baseDir$)
+    addon_dir!=Paths.get(cloneDir$)
+    if (addon_dir!.startsWith(base_dir!)) then 
+        Files.createDirectories(addon_dir!)
+        if (! osIsWindows!) then 
+           	current_dir!=addon_dir!
+           	permissions!=PosixFilePermissions.fromString("rwxrwxrwx")
+           	while (current_dir!<>base_dir!.getParent()) 
+               	    Files.setPosixFilePermissions(current_dir!,permissions!)
+               	    userPrincipal!=FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByName(info(3,2))
+               	    Files.setOwner(current_dir!,userPrincipal!)
+               	    current_dir!=current_dir!.getParent()
+           	wend
+        endif
+    endif 
 
     rem --- Clone Git repository
     print (log_dev)"    Git Auth ID: ",gitAuthID$

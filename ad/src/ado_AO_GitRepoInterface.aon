@@ -34,6 +34,7 @@ rem  */
     use java.util.ArrayList
     use java.util.Arrays
     use java.util.Iterator
+    use java.util.stream.Collectors
 
     use com.jcraft.jsch.JSch
     use com.jcraft.jsch.Session
@@ -1088,9 +1089,9 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
                 checkOutCmd!.addPaths(filesToCheckOut!)
                 checkOutCmd!.call()
 
-                declare OwnerSetter setter!
-                setter!=new OwnerSetter()
-                if (! setter!.getOSIsWindows()) then
+                if (! OwnerSetter.getOSIsWindows()) then
+                    declare OwnerSetter setter!
+                    setter!=new OwnerSetter()
                     setter!.setOwnerRecursively(#AonDir$)
                 endif
             endif
@@ -1258,6 +1259,18 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             #git!.tag().setAnnotated(0).setName(tagName!).call()
         methodend
 
+        REM Searches a file for a substring and returns 1 if the file contains the substring. Otherwise,
+        REM returns 0. 
+        method public BBjNumber fileContains(BBjString filePath$, BBjString substring$)
+            declare Path fileToSearch!
+            declare java.util.List fileLines!
+            declare BBjString fileContent!
+        
+            fileToSearch!=Paths.get(filePath$)
+            fileLines!=Files.readAllLines(fileToSearch!)
+            fileContent!=cast(BBjString,fileLines!.stream().collect(Collectors.joining()))
+            methodret fileContent!.contains(substring$)
+        methodend 
 classend
 
 REM Parses the FixedIssues file and extracts the version and date from the file if successful
