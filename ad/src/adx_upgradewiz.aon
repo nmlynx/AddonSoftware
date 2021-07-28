@@ -292,6 +292,7 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         rem --- use the CDFMassager to copy user's changes into the reordered CDFs
         cm!=new CdfMassager()
         cm!.setMakeAnnotations(0)
+        cm!.setCopyingFromMods(0)
         cm!.importModChanges(cdfDirName!,newCdfDirName!)
 
         rem --- rename cdf to cdf_old and cdf_reordered to cdf

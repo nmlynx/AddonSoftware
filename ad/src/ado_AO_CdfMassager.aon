@@ -21,30 +21,33 @@ rem ==========================================================================
     use java.util.Vector
 
     use ::ado_file.src::FileObject
-	use ::ado_GitRepoInterface.aon::GitRepoInterface
+    use ::ado_GitRepoInterface.aon::GitRepoInterface
 
 rem /**
 rem  * This class is used to restructure data/cdf callpoint programs.
 rem  * Alphabetizes callpoints, and merges Mods project before/after callpoints into standard code.
 rem  */
-    
+
     class public AO_CdfMassager
-    
+
         field protected BBjString CALLPOINT_SUFFIX!="\.([AB])\]\]\s*$"
         field protected BBjString SKIP_STRING!=".*setStatus\(\"+$22$+"([^-\r]*)-?SKIP-?(.*)\"+$22$+"\).*"
         field protected BBjString KEY_PATTERN!="^\s*\[\[.*\]\]"
-        
+
         REM Signifies whether we should explicitly mark headers and skipped lines from mods in the merged file
         field public BBjNumber MakeAnnotations=1
         
+        REM Signifies whether we're copying from a mods directory (1) or from core (0).  Default is mods (1) 
+        field public BBjNumber CopyingFromMods=1
+
         rem /**
         rem  * Constructor.
         rem  */
         method public AO_CdfMassager()
             seterr GitRepoInterface_error
-            
+
             methodret
-            
+
 GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -56,10 +59,10 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
-    
+
         rem /**
         rem  * Combines two Maps of callpoint code into a single combined Map.
         rem  * 
@@ -69,7 +72,7 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
         rem  * @return Map combinedCallpoints!
         rem  */
         method public Map combineCdfFiles(Map aonCallpoints!, Map modsCallpoints!)
-            
+
             declare Set modKeys!
             declare Iterator modKeyIter!
             declare BBjString modKey!
@@ -78,99 +81,115 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             declare BBjString aonBody!
             declare BBjString modsBody!
             declare BBjString body!
-            
+
             REM Iterate through the mods callpoints and correlate them to the core callpoints 
             modKeys!=modsCallpoints!.keySet()
             modKeyIter!=modKeys!.iterator()
-            
+
             while modKeyIter!.hasNext()
                 suffix!=""
                 modKey!=cast(BBjString,modKeyIter!.next())
-                
+
                 rem -- handle custom callpoints 
                 custom!=modKey!.contains("<CUSTOM>")
                 if (custom!) then
                     newKey!=#desuffix(modKey!)
                     body!=cast(BBjString,modsCallpoints!.get(modKey!))
-                    if (#MakeAnnotations) then 
+                    if (#MakeAnnotations) then
                         body!=newKey!+$0A$+"REM *** Custom from mods ***"+$0A$+"REM    "+body!.replace("[[","").replace("]]","")
-                    else 
+                    else
                         ndx=body!.indexOf($0A$)
                         body!=newKey!+$0A$+body!.substring(ndx+1)
-                    endif 
+                    endif
                     aonCallpoints!.put(newKey!,body!)
                     continue
-                endif 
-                
+                endif
+
                 rem -- get the callpoint header suffix
-                suffix!=#getSuffix(modKey!) 
-                
-                rem -- ignore  callpoints without a suffix  
-                if (suffix!.length()<=0) then 
+                suffix!=#getSuffix(modKey!)
+
+                rem -- ignore  callpoints without a suffix if copying mods
+                if (suffix!.length()<=0 and #CopyingFromMods) then
                     continue
-                endif  
-                
-                rem -- handle callponts with a suffix 
-                aonKey!=#desuffix(modKey!)
-                
+                endif
+
+                rem -- handle callpoints
+                if (suffix!.length()) then
+                    aonKey!=#desuffix(modKey!)
+                else
+                    aonKey!=modKey!
+                endif
+
                 aonBody!=cast(BBjString,aonCallpoints!.get(aonKey!))
                 modsBody!=cast(BBjString,modsCallpoints!.get(modKey!))
-                
+
                 REM -- REM the header line of the addon callpoint
                 if (aonBody!<>null()) then
-                    if (#MakeAnnotations) then 
+                    if (#MakeAnnotations) then
                         aonBody!="REM    "+aonBody!.replace("[[","").replace("]]","")
-                    else 
+                    else
                         ndx=aonBody!.indexOf($0A$)
                         aonBody!=aonBody!.substring(ndx+1)
-                    endif 
-                endif 
+                    endif
+                endif
 
                 REM -- REM the header line of the mods callpoint 
                 if (modsBody!<>null()) then
-                    if (#MakeAnnotations) then 
+                    if (#MakeAnnotations) then
                         modsBody!="REM    "+modsBody!.replace("[[","").replace("]]","")
-                    else 
+                    else
                         modsBody!.indexOf($0A$)
                         modsBody!=modsBody!.substring(ndx+1)
-                    endif 
-                else 
+                    endif
+                else
                     REM -- Throw an error on a null mods callpoint.  This should not be able to happen, so something is wrong
                     throw "Mods callpoint is completely empty.  This should never happen.",17
-                endif 
+                endif
 
                 rem -- there's a before or after callpoint in mods that's not defined at all in core 
-                if aonBody!=null() then 
+                if aonBody!=null() then
                     body!=aonKey!+$0A$+iff(#MakeAnnotations,"REM *** Callpoint from mods that's not in core ***"+$0A$,$$)+modsBody!
                     body!=#replaceSkips(body!)
                     aonCallpoints!.put(aonKey!,body!)
                     continue
-                endif 
-                
+                endif
+
                 rem -- append after callpoint to core callpoint 
-                if suffix!="A" then 
+                if suffix!="A" then
                     body!=aonKey!+$0A$+iff(#MakeAnnotations,"REM *** Core + After: Core ***"+$0A$,$$)+aonBody!+$0A$+iff(#MakeAnnotations,"REM *** Core + After: After ***"+$0A$,$$)+modsBody!
-                endif 
-                
+                endif
+
                 rem -- if before without skip, append the core callpoint to the before callpoint, otherwise, replace the core 
                 if suffix!="B" then
                     if (#isSkipPresent(modsBody!)) then
                         modsBody!=#replaceSkips(modsBody!)
                         body!=aonKey!+$0A$+iff(#MakeAnnotations,"REM *** Before with skip ***"+$0A$,$$)+modsBody!
-                    else 
+                    else
                         body!=aonKey!+$0A$+iff(#MakeAnnotations,"REM *** Before without skip + Core: Before ***"+$0A$,$$)+modsBody!+$0A$+iff(#MakeAnnotations,"REM *** Before without skip + Core: Core ***"+$0A$,$$)+aonBody!
-                    endif 
-                endif 
-                
-                if (suffix!<>"A" and suffix!<>"B") then
+                    endif
+                endif
+
+                REM If we're copying from mods, we should not get here, but checking just in case
+                if (suffix!="" and !#CopyingFromMods) then
+                        body!=aonKey!+$0A$+modsBody!
+                        if (aonBody!<>null()) then 
+                            if aonBody!.endsWith($0A0A$) then 
+                                while !body!.endsWith($0A0A$) 
+                                    body!=body!+$0A$
+                                wend
+                            endif
+                        endif 
+                endif
+
+                if (suffix!<>"" and suffix!<>"A" and suffix!<>"B") then
                     throw "Don't know what to do for suffix: "+suffix!,17
-                endif 
-                
+                endif
+
                 aonCallpoints!.put(aonKey!,body!)
-            wend 
+            wend
             methodret aonCallpoints!
-        methodend 
-    
+        methodend
+
         rem /**
         rem  * Combines modified Addon callpoint code with standard Addon callpoint code
         rem  * into a single data/cdf callpoint program in the Addon installation. 
@@ -189,7 +208,7 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             modsCdfDir$=FileObject.addEndSlash(modsCdfDir$, "/")
             aonCdfDir$=FileObject.fixPath(aonCdfDir$, "/")
             aonCdfDir$=FileObject.addEndSlash(aonCdfDir$, "/")
-            
+
             rem --- Verify directories exist
             rem     Throw an error if these directories don't exist. These directories must exist with CDF
             rem     files for the massager to work. 
@@ -197,7 +216,7 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             if !modsCdfDir!.exists() or !modsCdfDir!.isDirectory() then throw "Directory "+modsCdfDir!.getPath()+" doesn't exist or isn't a directory.",12
             aonCdfDir!=new File(aonCdfDir$)
             if !aonCdfDir!.exists() or !aonCdfDir!.isDirectory() then throw "Directory "+modsCdfDir!.getPath()+" doesn't exist or isn't a directory.",12
-            
+
             rem --- Process mods cdf files
             modsCdfs! = new Vector(java.util.Arrays.asList(modsCdfDir!.listFiles()))
             modsCdfIter!=modsCdfs!.iterator()
@@ -212,11 +231,11 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                     modsCallpoints!=#readCdfFile(modsCdfFile!.getPath())
                     combinedCallpoints!=#combineCdfFiles(aonCallpoints!,modsCallpoints!)
                     #writeCdfFile(combinedCallpoints!,aonCdfFile!.getPath())
-                endif 
+                endif
             wend
-            
+
             methodret
-            
+
 importModChanges_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -228,10 +247,10 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
-        
+
         rem /**
         rem  * Builds LinkedHashMap of callpoint code in specified cdf file.
         rem  * 
@@ -243,7 +262,7 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
             declare Scanner sc!
             sc!=new Scanner(new File(filePath$))
             methodret #readCdfFile(sc!,new LinkedHashMap())
-        methodend 
+        methodend
 
         rem /**
         rem  * Builds LinkedHashMap of callpoint code in specified cdf file.
@@ -254,40 +273,40 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method public Map readCdfFile(Scanner sc!, Map cdfMap!)
             seterr readCdfFile_error
-            
+
             declare BBjString replacementString!
             declare BBjString currentHeaderLine!
-            
+
             if (cdfMap!=null()) then throw "Map parameter cannot be null",253
 
             rem --- Initializations
             pattern!=Pattern.compile(#KEY_PATTERN!)
-            
+
             rem --- Read all callpoints from a cdf file and put them into a map
             key!=null()
             body!=""
-            while (sc!.hasNextLine()) 
+            while (sc!.hasNextLine())
                 rem --- Test for new callpoint.
                 newLine!=sc!.nextLine()
                 matcher!=pattern!.matcher(newLine!)
                 if (matcher!.find()) then
                     newKey!=matcher!.group()
-                    currentHeaderLine!=cast(BBjString,newLine!) 
-                else 
+                    currentHeaderLine!=cast(BBjString,newLine!)
+                else
                     newKey!=null()
-                endif 
-                
+                endif
+
                 rem -- handle new callpoint 
                 if (newKey!<>null()) then
-                    cdfMap!.put(newKey!,"") 
+                    cdfMap!.put(newKey!,"")
                     key!=newKey!
-                    newKey!=null() 
-                endif                     
-                cdfMap!.put(key!,cast(BBjString,cdfMap!.get(key!))+newLine!+$0A$) 
+                    newKey!=null()
+                endif
+                cdfMap!.put(key!,cast(BBjString,cdfMap!.get(key!))+newLine!+$0A$)
             wend
             sc!.close()
             methodret cdfMap!
-            
+
 readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -299,7 +318,7 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
@@ -321,48 +340,48 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
             declare BBjString group1!
             declare BBjString ground2!
             declare BBjString modifiedLine!
-            
+
             modifiedBody!=""
             lines!=Arrays.asList(body!.split($0A$))
-        
+
             lineIter!=lines!.iterator()
-            
+
             while lineIter!.hasNext()
                 currentLine!=cast(BBjString,lineIter!.next())
                 if (! currentLine!.matches(#SKIP_STRING!)) then
                     modifiedBody!=modifiedBody!+currentLine!+$0A$
                     continue
-                endif 
-                
+                endif
+
                 skipPattern!=Pattern.compile(#SKIP_STRING!)
                 skipMatcher!=skipPattern!.matcher(currentLine!)
                 skipMatcher!.find()
-                
+
                 group1!=skipMatcher!.group(1)
                 group2!=skipMatcher!.group(2)
-                
+
                 action!=""
-                if (group1!.length()>0) then 
+                if (group1!.length()>0) then
                     action!=group1!
-                endif 
-                    
-                if (group2!.length()>0) then 
-                    if (action!.length()>0) then 
-                        action!=action!+"-"+group2!
-                    else 
-                        action!=group2!
-                    endif 
                 endif
-                
+
+                if (group2!.length()>0) then
+                    if (action!.length()>0) then
+                        action!=action!+"-"+group2!
+                    else
+                        action!=group2!
+                    endif
+                endif
+
                 modifiedLine!="REM    "+currentLine!
-                if (action!.length()>0) then 
+                if (action!.length()>0) then
                     modifiedLine!=modifiedLine!+$0A$+"callpoint!.setStatus("+$22$+action!+$22$+")"
-                endif   
-                
+                endif
+
                 modifiedBody!=modifiedBody!+modifiedLine!+$0A$
-            wend 
+            wend
             methodret modifiedBody!
-        methodend 
+        methodend
 
         rem /**
         rem  * Returns true if the callpoint body contains a setStatus("*SKIP*")
@@ -374,11 +393,11 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
         method protected BBjNumber isSkipPresent(BBjString body!)
             declare Pattern skipPattern!
             declare Matcher skipMatcher!
-            
+
             skipPattern!=Pattern.compile(#SKIP_STRING!)
             skipMatcher!=skipPattern!.matcher(body!)
             methodret skipMatcher!.find()
-        methodend 
+        methodend
 
         rem /**
         rem  * Returns the single letter suffix of the callpoint header
@@ -389,17 +408,17 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method protected BBjString getSuffix(BBjString key!)
             declare Pattern pattern!
-            declare Matcher matcher! 
+            declare Matcher matcher!
             declare BBjString group!
-            
+
             pattern!=Pattern.compile(#CALLPOINT_SUFFIX!)
             matcher!=pattern!.matcher(key!)
-            if (matcher!.find()) then  
+            if (matcher!.find()) then
                 methodret matcher!.group(1).toUpperCase()
-            else 
+            else
                 methodret ""
-            endif 
-        methodend        
+            endif
+        methodend
 
         rem /**
         rem  * Transforms a callpoint header with a suffix into a callpoint header without a suffix 
@@ -410,7 +429,7 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method protected BBjString desuffix(BBjString key!)
             methodret key!.replaceAll(#CALLPOINT_SUFFIX!,"]]")
-        methodend 
+        methodend
 
         rem /**
         rem  * Returns whether the callpoint header denotes a before callpoint
@@ -421,7 +440,7 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method protected BBjNumber isBefore(BBjString key!)
             methodret #getSuffix(key!)="B"
-        methodend 
+        methodend
 
         rem /**
         rem  * Builds TreeMap of callpoint code in specified cdf file.
@@ -434,7 +453,7 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
             declare Scanner sc!
             sc!=new Scanner(new File(filePath$))
             methodret #readCdfFile(sc!,new TreeMap())
-        methodend 
+        methodend
 
         rem /**
         rem  * Writes specified cdf file from given LinkedHashMap of callpoint code.
@@ -444,13 +463,13 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method public void writeCdfFile(Map cdfMap!, BBjString filePath$)
             seterr writeCdf_error
-            
+
             rem --- Open specified cdf file.  Warning: this will overwrite an existing file
             erase filePath$,err=*next
             string filePath$
             chan=unt
             open (chan) filePath$
-            
+
             rem --- Go through LinkedHashMap and write all the callpoints
             iter!=cdfMap!.keySet().iterator()
             sv_key$=""
@@ -462,9 +481,9 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
             wend
 
             close (chan)
-            
+
             methodret
-            
+
 writeCdf_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -476,9 +495,9 @@ writeCdf_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
+        methodend
 
         rem /**
         rem  * Writes specified cdf file from given TreeMap of callpoint code.
@@ -489,12 +508,12 @@ writeCdf_error:rem --- Method error trap/handler (11Oct2017)
         method public void writeOrderedCdfFile(TreeMap cdfMap!, BBjString filePath$)
             #writeCdfFile(cdfMap!,filePath$)
         methodend
-		
+
         rem /**
         rem  *  Rearranges the order of the callpoints in a CDF map to the order of the callpoints in CDF from a given commit  
         rem  */
-		method public Map reorderToMatchCommit(Map cdfMap!, GitRepoInterface git!,BBjString commitId$,BBjString filePath$) 
-			 
+		method public Map reorderToMatchCommit(Map cdfMap!, GitRepoInterface git!,BBjString commitId$,BBjString filePath$)
+
 			declare BBjString fileContent!
             declare Map extractionMap!
             declare Scanner sc!
@@ -504,15 +523,15 @@ writeCdf_error:rem --- Method error trap/handler (11Oct2017)
             declare BBjString cdfContent!
             declare Pattern callpointEndPattern!
             declare Matcher callpointEndMatcher!
-            
-            
+
+
             rem Get the CDF file from which we want to get the callpoint order                        			
 			fileContent!=git!.getFileContent(filePath$,commitId$)
-			
+
 			rem Extract the keys from the file content 			
 			sc!=new Scanner(fileContent!)
 			extractionMap!=#readCdfFile(sc!,new LinkedHashMap())
-			
+
 			REM Look for presence of additional carriage returns at the end of the file and add them to the
 			REM corresponding callpoint in cdfMap if we find them. 
 			callpointEndPattern!=Pattern.compile("\n\n$",Pattern.DOTALL)
@@ -520,30 +539,30 @@ writeCdf_error:rem --- Method error trap/handler (11Oct2017)
 			while (extractionIter!.hasNext())
 			    extractionKey!=cast(BBjString,extractionIter!.next())
 			    extractionContent!=cast(BBjString,extractionMap!.get(extractionKey!))
-			    
+
 			    REM -- see if the upgrade version of the callpoint ends with two linefeeds
 			    callpointEndMatcher!=callpointEndPattern!.matcher(extractionContent!)
 			    if (! callpointEndMatcher!.find()) then continue
-			     
+
 			    REM -- see if the core version of the upgrade callpoint exists 
 			    cdfContent!=cast(BBjString,cdfMap!.get(extractionKey!))
 			    if (cdfContent!=null()) then continue
-			    
+
 			    REM -- see if the core version of the callpoint doesn't already end in two linefeeds 
 			    callpointEndMatcher!=callpointEndPattern!.matcher(cdfContent!)
-			    if (callpointEndMatcher!.find()) then continue  
-			    
+			    if (callpointEndMatcher!.find()) then continue
+
 			    REM -- put an extra linefeed at the end of the core callpoint (It already ends in one linefeed.) 
-			    cdfMap!.put(extractionKey!,cdfContent!+$0A$) 
-			wend 
-			
+			    cdfMap!.put(extractionKey!,cdfContent!+$0A$)
+			wend
+
 			REM Remove any keys from the extractionMap that don't exist in the cdfMap and then copy the keys
 			extractionMap!.keySet().retainAll(cdfMap!.keySet())
 			extractionMap!.putAll(cdfMap!)
-			
-			methodret extractionMap! 
-		methodend 
-		
+
+			methodret extractionMap!
+		methodend
+
 		REM /** 
 		REM  * Reorder and commit CDF files 
 		REM **/
@@ -553,7 +572,7 @@ writeCdf_error:rem --- Method error trap/handler (11Oct2017)
 		    declare java.io.File cdfFile!
 		    declare BBjString cdfFileName!
 		    declare Map reorderedCdfMap!
-		    declare java.io.File coreCdfDirFile! 
+		    declare java.io.File coreCdfDirFile!
 		    coreCdfDirFile!=new java.io.File(coreCdfDir!)
 		    cdfFiles! = Arrays.asList(coreCdfDirFile!.listFiles())
 		    cdfIter!=cdfFiles!.iterator()
@@ -561,14 +580,14 @@ writeCdf_error:rem --- Method error trap/handler (11Oct2017)
 		        cdfFile!=cast(java.io.File,cdfIter!.next())
 		        cdfFileName!=cdfFile!.getName()
 		        if (! cdfFileName!.endsWith(".cdf")) then continue
-		        cdfMap!=#readCdfFile(cdfFile!.getAbsolutePath()) 
+		        cdfMap!=#readCdfFile(cdfFile!.getAbsolutePath())
 		        reorderedCdfMap!=#reorderToMatchCommit(cdfMap!,git!,commitId$,"data/cdf/"+cdfFileName!)
-		        
+
 		        rem -- overwrite the file 
 		        #writeCdfFile(reorderedCdfMap!,cdfFile!.getAbsolutePath())
-		    wend 
+		    wend
 		    git!.commitAll(1,"BBJ UPGRADE WIZARD: Check in reordered CDFs. Do not cherry-pick this commit.")
 		    git!.tagCurrentCommit(git!.getReorderedTagName())
-		methodend 
-		
+		methodend
+
 classend
