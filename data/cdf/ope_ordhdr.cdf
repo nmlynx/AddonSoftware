@@ -3397,6 +3397,9 @@ rem ==========================================================================
 			dim ope11a$:fnget_tpl$("OPE_ORDDET")
 			ope11_dev=fnget_dev("OPE_ORDDET")
 
+			ope21_dev = fnget_dev("OPE_ORDLSDET")
+			dim ope21a$:fnget_tpl$("OPE_ORDLSDET")
+
 			ivm01_dev=fnget_dev("IVM_ITEMMAST")
 			dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 
@@ -3525,6 +3528,28 @@ rem ==========================================================================
 
 				ope11a$ = field(ope11a$)
 				write record (ope11_dev) ope11a$
+
+				rem --- Commit inventory for this new order
+				if ope11a.commit_flag$ ="Y" and pos(opc_linecode.line_type$="SP") then
+					wh_id$=ope11a.warehouse_id$
+					item_id$ =ope11a.item_id$
+					ls_id$=""
+					qty=ope11a.qty_ordered
+					gosub update_totals; rem --- do ATAMO for item
+
+					if pos(user_tpl.lotser_flag$="LS") then 
+						rem --- Process lotted/serialized items
+						read(ope21_dev,key=ope11_key$,dom=*next)
+						while 1
+							ope21_key$=key(ope21_dev,end=*break)
+							if pos(ope11_key$=ope21_key$)<>1 then break
+							readrecord(ope21_dev)ope21a$
+
+							ls_id$=ope21a.lotser_no$
+							gosub update_totals; rem --- do ATAMO for lot/serial
+						wend
+					endif
+				endif
 			wend
 			read(ope11_dev,knum="AO_STAT_CUST_ORD",dom=*next); rem --- reset key to OPE_ORDDET form's key
 
