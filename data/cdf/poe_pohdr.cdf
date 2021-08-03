@@ -1,3 +1,96 @@
+[[POE_POHDR.ADIS]]
+vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
+purch_addr$=callpoint!.getColumnData("POE_POHDR.PURCH_ADDR")
+gosub vendor_info
+gosub disp_vendor_comments
+gosub purch_addr_info
+gosub whse_addr_info
+
+rem --- disable drop-ship checkbox, customer, order until/unless no detail exists
+
+dtl!=gridvect!.getItem(0)		
+if dtl!.size()
+	callpoint!.setDevObject("dtl_posted","Y")
+else
+	callpoint!.setDevObject("dtl_posted","")
+endif
+gosub enable_dropship_fields 
+
+rem --- check if receiver, QA receiver, or invoice exists for this PO.  If so, give warning and don't allow edits
+rem --- old code checked poe-33 (QA), 34(receiver) and 35 (invoice GL dist); we'll use alt_key_01 on the 33 and 34 files, and we still have 35.
+rem --- v6 code that accessed poe-35 looks like it could never have worked?
+
+poe_qahdr_dev=fnget_dev("POE_QAHDR")
+dim poe_qahdr$:fnget_tpl$("POE_QAHDR")
+
+poe_rechdr_dev=fnget_dev("POE_RECHDR")
+dim poe_rechdr$:fnget_tpl$("POE_RECHDR")
+
+poe_invdet_dev=fnget_dev("POE_INVDET")
+dim poe_invdet$:fnget_tpl$("POE_INVDET")
+
+vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
+po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+
+read (poe_rechdr_dev,key=firm_id$+po_no$+vendor_id$,knum="AO_VEND_RCVR_PO",dom=*next)
+read record (poe_rechdr_dev,err=*next)poe_rechdr$
+if poe_rechdr.firm_id$=firm_id$ and poe_rechdr.vendor_id$=vendor_id$ and poe_rechdr.po_no$=po_no$
+	msg_id$="PO_REC_EXISTS"
+	gosub disp_message
+	callpoint!.setStatus("NEWREC")
+endif
+
+read (poe_qahdr_dev,key=firm_id$+po_no$+vendor_id$,knum="AO_PO_VEND_RCVR",dom=*next)
+read record (poe_qahdr_dev,err=*next)poe_qahdr$
+if poe_qahdr.firm_id$=firm_id$ and poe_qahdr.vendor_id$=vendor_id$ and poe_qahdr.po_no$=po_no$
+	msg_id$="PO_QA_EXISTS"
+	gosub disp_message
+	callpoint!.setStatus("NEWREC")
+endif
+
+read (poe_invdet_dev,key=firm_id$+po_no$+vendor_id$,knum="AO_PO_VEND",dom=*next)
+read record (poe_invdet_dev,err=*next)poe_invdet$
+if poe_invdet.firm_id$=firm_id$ and poe_invdet.vendor_id$=vendor_id$ and poe_invdet.po_no$=po_no$
+	msg_id$="PO_INV_EXISTS"
+	gosub disp_message
+	callpoint!.setStatus("NEWREC")
+endif
+
+so_lines_used$=callpoint!.getDevObject("so_lines_used")
+if so_lines_used$="ALL" then
+	msg_id$="PO_ALL_SO_LINES_USED"
+	gosub disp_message
+endif
+if so_lines_used$="SOME" then
+	msg_id$="PO_SO_LINES_USED"
+	gosub disp_message
+endif
+
+[[POE_POHDR.AOPT-DPRT]]
+rem --- PO changes must be saved before on-demand PO print
+
+	if callpoint!.getRecordStatus()="M" then
+		msg_id$="PO_SAVE_REQUIRED"
+		gosub disp_message
+	else
+		vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
+		po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+
+		if cvs(vendor_id$,3)<>"" and cvs(po_no$,3)<>""
+			gosub queue_for_printing
+
+			dim dflt_data$[2,1]
+
+			dflt_data$[1,0]="PO_NO"
+			dflt_data$[1,1]=po_no$
+			dflt_data$[2,0]="VENDOR_ID"
+			dflt_data$[2,1]=vendor_id$
+
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj","POR_POPRINT_DMD",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
+
+		endif
+	endif
+
 [[POE_POHDR.AOPT-DREC]]
 rem --- Duplicate Historical Receipt
 	dim filter_defs$[2,2]
@@ -73,6 +166,11 @@ rem --- Duplicate Historical Receipt
 				rem --- Copy detail records
 				poe_podet_dev = fnget_dev("POE_PODET")
 				dim poe_podet$:fnget_tpl$("POE_PODET")
+				poc_linecode_dev=fnget_dev("POC_LINECODE")
+				dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+
+				rem --- Initialize ATAMO
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
 				pot_recdet_dev = fnget_dev("POT_RECDET")
 				dim pot_recdet$:fnget_tpl$("POT_RECDET")
@@ -117,83 +215,26 @@ rem --- Duplicate Historical Receipt
 					if status=0 then poe_podet.unit_cost=unit_cost
 					poe_podet$=field(poe_podet$)
 					write record (poe_podet_dev) poe_podet$
+
+					rem --- Update On Order quantity for this item, unless it's a dropship PO
+					if callpoint!.getColumnData("POE_POHDR.DROPSHIP")<>"Y"
+						redim poc_linecode$
+						find record (poc_linecode_dev,key=firm_id$+poe_podet.po_line_code$,dom=*next)poc_linecode$
+						if poc_linecode.line_type$="S"
+							items$[0]=firm_id$
+							items$[1]=poe_podet.warehouse_id$
+							items$[2]=poe_podet.item_id$
+							refs[0]=poe_podet.qty_ordered*poe_podet.conv_factor
+							action$="OO"
+							call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
+						endif
+					endif
 				wend
 				callpoint!.setStatus("RECORD:["+poe_pohdr.firm_id$+poe_pohdr.po_no$+"]")
 			endif
 		endif
 	endif
-[[POE_POHDR.SHIPTO_NO.AVAL]]
-rem --- if dropshipping, retrieve/display specified shipto address
 
-	shipto$=cvs(callpoint!.getUserInput(),3)
-	tmp_customer_id$=callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID")
-	
-	if shipto$="" then
-		rem --- no shipto, so use customer's address
-		gosub shipto_cust
-	else
-		arm_custship_dev=fnget_dev("ARM_CUSTSHIP")
-		dim arm_custship$:fnget_tpl$("ARM_CUSTSHIP")
-		read record (arm_custship_dev,key=firm_id$+tmp_customer_id$+shipto$,dom=*next)arm_custship$
-		dim rec$:fattr(arm_custship$)
-		rec$=arm_custship$
-		gosub fill_dropship_address
-		callpoint!.setColumnData("POE_POHDR.DS_NAME",rec.name$,1)
-	endif
-[[POE_POHDR.BPFX]]
-rem --- disable buttons
-
-	callpoint!.setOptionEnabled("QPRT",0)
-	callpoint!.setOptionEnabled("DPRT",0)
-	callpoint!.setOptionEnabled("DREC",0)
-[[POE_POHDR.ORD_DATE.AVAL]]
-ord_date$=cvs(callpoint!.getUserInput(),2)
-req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
-promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
-not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
-
-gosub validate_dates
-[[POE_POHDR.PO_NO.AVAL]]
-rem --- don't allow user to assign new PO# -- use Barista seq#
-rem --- if user made null entry (to assign next seq automatically) then getRawUserInput() will be empty
-rem --- if not empty, then the user typed a number -- if an existing po, fine; if not, abort
-
-if cvs(callpoint!.getRawUserInput(),3)<>""
-	msk$=callpoint!.getTableColumnAttribute("POE_POHDR.PO_NO","MSKI")
-	find_po$=str(num(callpoint!.getRawUserInput()):msk$)
-	poe_pohdr_dev=fnget_dev("POE_POHDR")
-	dim poe_pohdr$:fnget_tpl$("POE_POHDR")
-	read record (poe_pohdr_dev,key=firm_id$+find_po$,dom=*next)poe_pohdr$
-	if poe_pohdr.firm_id$<>firm_id$ or  poe_pohdr.po_no$<>find_po$
-		msg_id$="PO_INVAL_PO"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
-endif
-[[POE_POHDR.AOPT-DPRT]]
-rem --- PO changes must be saved before on-demand PO print
-
-	if callpoint!.getRecordStatus()="M" then
-		msg_id$="PO_SAVE_REQUIRED"
-		gosub disp_message
-	else
-		vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
-		po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
-
-		if cvs(vendor_id$,3)<>"" and cvs(po_no$,3)<>""
-			gosub queue_for_printing
-
-			dim dflt_data$[2,1]
-
-			dflt_data$[1,0]="PO_NO"
-			dflt_data$[1,1]=po_no$
-			dflt_data$[2,0]="VENDOR_ID"
-			dflt_data$[2,1]=vendor_id$
-
-			call stbl("+DIR_SYP")+"bam_run_prog.bbj","POR_POPRINT_DMD",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
-
-		endif
-	endif
 [[POE_POHDR.AOPT-QPRT]]
 rem --- PO number and vendor ID required for printing PO
 
@@ -205,6 +246,85 @@ rem --- PO number and vendor ID required for printing PO
 		msg_id$="PO_QPRT"
 		gosub disp_message
 	endif
+
+[[POE_POHDR.APFE]]
+rem --- set total order amt
+
+total_amt=num(callpoint!.getDevObject("total_amt"))
+callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL",str(total_amt),1)
+tamt!=callpoint!.getDevObject("tamt")
+tamt!.setValue(total_amt)
+
+rem --- check dtl_posted flag to see if dropship fields should be disabled
+
+gosub enable_dropship_fields 
+
+rem --- enable/disable buttons
+
+	po_no$=cvs(callpoint!.getColumnData("POE_POHDR.PO_NO"),3)
+	vendor_id$=cvs(callpoint!.getColumnData("POE_POHDR.VENDOR_ID"),3)
+
+	if po_no$<>""
+		callpoint!.setOptionEnabled("QPRT",1)
+		callpoint!.setOptionEnabled("DPRT",1)
+		callpoint!.setOptionEnabled("DREC",0)
+	else
+		callpoint!.setOptionEnabled("QPRT",0)
+		callpoint!.setOptionEnabled("DPRT",0)
+		callpoint!.setOptionEnabled("DREC",1)
+	endif
+
+[[POE_POHDR.ARAR]]
+vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
+purch_addr$=callpoint!.getColumnData("POE_POHDR.PURCH_ADDR")
+gosub vendor_info
+gosub purch_addr_info
+gosub whse_addr_info
+gosub form_inits
+
+rem ---	depending on whether or not drop-ship flag is selected and OE is installed...
+rem ---	if drop-ship is selected, load up sales order line#'s for the detail grid's so reference listbutton
+
+callpoint!.setDevObject("so_lines_used","")
+if callpoint!.getColumnData("POE_POHDR.DROPSHIP")="Y"
+
+	if callpoint!.getDevObject("OP_installed")="Y"
+		tmp_customer_id$=callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID")
+		tmp_order_no$=callpoint!.getColumnData("POE_POHDR.ORDER_NO")
+		gosub get_dropship_order_lines
+
+	endif
+endif
+
+[[POE_POHDR.AREC]]
+gosub  form_inits
+
+[[POE_POHDR.ARNF]]
+rem -- set default values
+rem --- IV Params
+	ivs_params_chn=fnget_dev("IVS_PARAMS")
+	dim ivs_params$:fnget_tpl$("IVS_PARAMS")
+	read record(ivs_params_chn,key=firm_id$+"IV00")ivs_params$
+rem --- PO Params
+	pos_params_chn=fnget_dev("POS_PARAMS")
+	dim pos_params$:fnget_tpl$("POS_PARAMS")
+	read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
+rem --- Set Defaults
+	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL","",1)
+	callpoint!.setColumnData("POE_POHDR.WAREHOUSE_ID",ivs_params.warehouse_id$,1)
+	gosub whse_addr_info
+	callpoint!.setColumnData("POE_POHDR.ORD_DATE",sysinfo.system_date$,1)
+	callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",pos_params.po_frt_terms$,1)
+	callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",pos_params.ap_ship_via$,1)
+	callpoint!.setColumnData("POE_POHDR.FOB",pos_params.fob$,1)
+	callpoint!.setColumnData("POE_POHDR.HOLD_FLAG",pos_params.hold_flag$,1)
+	callpoint!.setColumnData("POE_POHDR.PO_MSG_CODE",pos_params.po_msg_code$,1)
+
+[[POE_POHDR.AWRI]]
+rem --- need to put out poe_poprint record
+
+gosub queue_for_printing
+
 [[POE_POHDR.BDEL]]
 rem --- don't allow deletion if any detail line on the PO has a non-zero qty received
 rem --- otherwise, give option to retain requisition (if applicable), reverse OO quantity, delete print and link records
@@ -363,383 +483,14 @@ else
 	endif
 
 endif
-[[POE_POHDR.VENDOR_ID.AVAL]]
-rem --- Update vendor info if vendor changed
-rem "VENDOR INACTIVE - FEATURE"
-vendor_id$ = callpoint!.getUserInput()
-apm01_dev=fnget_dev("APM_VENDMAST")
-apm01_tpl$=fnget_tpl$("APM_VENDMAST")
-dim apm01a$:apm01_tpl$
-apm01a_key$=firm_id$+vendor_id$
-find record (apm01_dev,key=apm01a_key$,err=*break) apm01a$
-if apm01a.vend_inactive$="Y" then
-   call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
-   msg_id$="AP_VEND_INACTIVE"
-   dim msg_tokens$[2]
-   msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-   msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
-   gosub disp_message
-   callpoint!.setStatus("ACTIVATE-ABORT")
-   goto std_exit
-endif
 
-	if vendor_id$<>callpoint!.getColumnData("POE_POHDR.VENDOR_ID") then
-		gosub vendor_info
-		gosub disp_vendor_comments
+[[POE_POHDR.BPFX]]
+rem --- disable buttons
 
-		rem --- Set defaults from Parameter record
-		pos_params_chn=fnget_dev("POS_PARAMS")
-		dim pos_params$:fnget_tpl$("POS_PARAMS")
-		read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
-		callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",pos_params.po_frt_terms$,1)
-		callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",pos_params.ap_ship_via$,1)
-		callpoint!.setColumnData("POE_POHDR.FOB",pos_params.fob$,1)
+	callpoint!.setOptionEnabled("QPRT",0)
+	callpoint!.setOptionEnabled("DPRT",0)
+	callpoint!.setOptionEnabled("DREC",0)
 
-		rem --- Now override the defaults with the Vendor info if not blank
-		if cvs(apm01a.ap_ship_via$,3)<>""
-			callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",apm01a.ap_ship_via$,1)
-		endif
-		if cvs(apm01a.fob$,3)<>""
-			callpoint!.setColumnData("POE_POHDR.FOB",apm01a.fob$,1)
-		endif
-		if cvs(apm01a.po_frt_terms$,3)<>""
-			callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",apm01a.po_frt_terms$,1)
-		endif
-
-		rem --- Use Terms Code from vendor's first AP type record
-		apm02_dev=fnget_dev("APM_VENDHIST")
-		dim apm02a$:fnget_tpl$("APM_VENDHIST")
-		read(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
-		tmp$=key(apm02_dev,end=done_apm_vendhist)
-		if pos(firm_id$+vendor_id$=tmp$)<>1 then goto done_apm_vendhist
-		readrecord(apm02_dev,key=tmp$)apm02a$
-		done_apm_vendhist:
-		callpoint!.setColumnData("POE_POHDR.AP_TERMS_CODE",apm02a.ap_terms_code$,1)
-	endif
-[[POE_POHDR.DROPSHIP.AVAL]]
-rem --- if turning off dropship flag, clear devObject items
-
-dropship$=callpoint!.getUserInput()
-if dropship$="N"
-	callpoint!.setDevObject("ds_orders","N")
-	callpoint!.setDevObject("so_ldat","")
-	callpoint!.setDevObject("so_lines_list","")
-	callpoint!.setColumnData("POE_POHDR.ORDER_NO","",1)
-	callpoint!.setColumnData("POE_POHDR.SHIPTO_NO","",1)
-endif
-
-callpoint!.setColumnData("POE_POHDR.DROPSHIP",dropship$,1)
-gosub enable_dropship_fields
-[[POE_POHDR.CUSTOMER_ID.AVAL]]
-if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID") then
-	rem --- if dropshipping, retrieve/display specified shipto address
-	callpoint!.setColumnData("POE_POHDR.ORDER_NO","",1)
-	callpoint!.setColumnData("POE_POHDR.SHIPTO_NO","",1)
-	callpoint!.setColumnData("POE_POHDR.DS_ADDR_LINE_1","",1)
-	callpoint!.setColumnData("POE_POHDR.DS_ADDR_LINE_2","",1)
-	callpoint!.setColumnData("POE_POHDR.DS_ADDR_LINE_3","",1)
-	callpoint!.setColumnData("POE_POHDR.DS_ADDR_LINE_4","",1)
-	callpoint!.setColumnData("POE_POHDR.DS_CITY","",1)
-	callpoint!.setColumnData("POE_POHDR.DS_NAME","",1)
-	callpoint!.setColumnData("POE_POHDR.DS_STATE_CD","",1)
-	callpoint!.setColumnData("POE_POHDR.DS_ZIP_CODE","",1)
-
-	tmp_customer_id$=callpoint!.getUserInput()
-	gosub shipto_cust;rem will refresh address w/ that from order once order# is entered
-endif
-[[POE_POHDR.ORDER_NO.AVAL]]
-rem --- if dropshipping, retrieve specified sales order and display shipto address
-
-if cvs(callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID"),3)<>""
-
-	tmp_customer_id$=callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID")
-	tmp_order_no$=callpoint!.getUserInput()
-
-	gosub dropship_shipto
-	gosub get_dropship_order_lines
-
-	if callpoint!.getDevObject("ds_orders")<>"Y" and cvs(callpoint!.getUserInput(),3)<>""
-		msg_id$="PO_NO_SO_LINES"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif			
-endif
-[[POE_POHDR.ADIS]]
-vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
-purch_addr$=callpoint!.getColumnData("POE_POHDR.PURCH_ADDR")
-gosub vendor_info
-gosub disp_vendor_comments
-gosub purch_addr_info
-gosub whse_addr_info
-
-rem --- disable drop-ship checkbox, customer, order until/unless no detail exists
-
-dtl!=gridvect!.getItem(0)		
-if dtl!.size()
-	callpoint!.setDevObject("dtl_posted","Y")
-else
-	callpoint!.setDevObject("dtl_posted","")
-endif
-gosub enable_dropship_fields 
-
-rem --- check if receiver, QA receiver, or invoice exists for this PO.  If so, give warning and don't allow edits
-rem --- old code checked poe-33 (QA), 34(receiver) and 35 (invoice GL dist); we'll use alt_key_01 on the 33 and 34 files, and we still have 35.
-rem --- v6 code that accessed poe-35 looks like it could never have worked?
-
-poe_qahdr_dev=fnget_dev("POE_QAHDR")
-dim poe_qahdr$:fnget_tpl$("POE_QAHDR")
-
-poe_rechdr_dev=fnget_dev("POE_RECHDR")
-dim poe_rechdr$:fnget_tpl$("POE_RECHDR")
-
-poe_invdet_dev=fnget_dev("POE_INVDET")
-dim poe_invdet$:fnget_tpl$("POE_INVDET")
-
-vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
-po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
-
-read (poe_rechdr_dev,key=firm_id$+po_no$+vendor_id$,knum="AO_VEND_RCVR_PO",dom=*next)
-read record (poe_rechdr_dev,err=*next)poe_rechdr$
-if poe_rechdr.firm_id$=firm_id$ and poe_rechdr.vendor_id$=vendor_id$ and poe_rechdr.po_no$=po_no$
-	msg_id$="PO_REC_EXISTS"
-	gosub disp_message
-	callpoint!.setStatus("NEWREC")
-endif
-
-read (poe_qahdr_dev,key=firm_id$+po_no$+vendor_id$,knum="AO_PO_VEND_RCVR",dom=*next)
-read record (poe_qahdr_dev,err=*next)poe_qahdr$
-if poe_qahdr.firm_id$=firm_id$ and poe_qahdr.vendor_id$=vendor_id$ and poe_qahdr.po_no$=po_no$
-	msg_id$="PO_QA_EXISTS"
-	gosub disp_message
-	callpoint!.setStatus("NEWREC")
-endif
-
-read (poe_invdet_dev,key=firm_id$+po_no$+vendor_id$,knum="AO_PO_VEND",dom=*next)
-read record (poe_invdet_dev,err=*next)poe_invdet$
-if poe_invdet.firm_id$=firm_id$ and poe_invdet.vendor_id$=vendor_id$ and poe_invdet.po_no$=po_no$
-	msg_id$="PO_INV_EXISTS"
-	gosub disp_message
-	callpoint!.setStatus("NEWREC")
-endif
-
-so_lines_used$=callpoint!.getDevObject("so_lines_used")
-if so_lines_used$="ALL" then
-	msg_id$="PO_ALL_SO_LINES_USED"
-	gosub disp_message
-endif
-if so_lines_used$="SOME" then
-	msg_id$="PO_SO_LINES_USED"
-	gosub disp_message
-endif
-[[POE_POHDR.AREC]]
-gosub  form_inits
-[[POE_POHDR.APFE]]
-rem --- set total order amt
-
-total_amt=num(callpoint!.getDevObject("total_amt"))
-callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL",str(total_amt),1)
-tamt!=callpoint!.getDevObject("tamt")
-tamt!.setValue(total_amt)
-
-rem --- check dtl_posted flag to see if dropship fields should be disabled
-
-gosub enable_dropship_fields 
-
-rem --- enable/disable buttons
-
-	po_no$=cvs(callpoint!.getColumnData("POE_POHDR.PO_NO"),3)
-	vendor_id$=cvs(callpoint!.getColumnData("POE_POHDR.VENDOR_ID"),3)
-
-	if po_no$<>""
-		callpoint!.setOptionEnabled("QPRT",1)
-		callpoint!.setOptionEnabled("DPRT",1)
-		callpoint!.setOptionEnabled("DREC",0)
-	else
-		callpoint!.setOptionEnabled("QPRT",0)
-		callpoint!.setOptionEnabled("DPRT",0)
-		callpoint!.setOptionEnabled("DREC",1)
-	endif
-[[POE_POHDR.AWRI]]
-rem --- need to put out poe_poprint record
-
-gosub queue_for_printing
-
-
-[[POE_POHDR.REQ_NO.AVAL]]
-rem --- Load PO from requisition
-
-req_no$=cvs(callpoint!.getUserInput(),3)
-if req_no$<>""
-
-	msg_id$="PO_CREATE_REQ"
-	gosub disp_message
-
-	if msg_opt$="Y"
-
-		rem --- write the po and podet recs, plus the print rec and poe_linked rec (if dropship)
-		rem --- also call atamo to adjust on order qty for S line types
-
-		status = 999
-		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status then goto std_exit
-
-		poe_reqhdr_dev=fnget_dev("POE_REQHDR")
-		dim poe_reqhdr$:fnget_tpl$("POE_REQHDR")
-		poe_pohdr_dev=fnget_dev("POE_POHDR")
-		dim poe_pohdr$:fnget_tpl$("POE_POHDR")
-		poe_reqdet_dev=fnget_dev("POE_REQDET")
-		dim poe_reqdet$:fnget_tpl$("POE_REQDET")
-		poe_podet_dev=fnget_dev("POE_PODET")
-		poe_reqprint_dev=fnget_dev("POE_REQPRINT")
-
-		poe_linked_dev=fnget_dev("POE_LINKED")
-		dim poe_linked$:fnget_tpl$("POE_LINKED")
-		poe_poprint_dev=fnget_dev("POE_POPRINT")
-		dim poe_poprint$:fnget_tpl$("POE_POPRINT")
-		poc_linecode_dev=fnget_dev("POC_LINECODE")
-		dim poc_linecode$:fnget_tpl$("POC_LINECODE")
-
-		po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
-		req_no$=callpoint!.getUserInput()
-		
-		read record (poe_reqhdr_dev,key=firm_id$+req_no$,dom=*break) poe_reqhdr$
-		call stbl("+DIR_PGM")+"adc_copyfile.aon",poe_reqhdr$,poe_pohdr$,status	
-		poe_pohdr.po_no$=po_no$
-		write record (poe_pohdr_dev) poe_pohdr$
-
-		poe_poprint.firm_id$=firm_id$
-		poe_poprint.vendor_id$=poe_pohdr.vendor_id$
-		poe_poprint.po_no$=poe_pohdr.po_no$
-		write record (poe_poprint_dev)poe_poprint$
-
-		read record(poe_reqdet_dev,key=firm_id$+req_no$,dom=*next)
-
-		while 1
-			read record(poe_reqdet_dev,end=*break) poe_reqdet$
-			if poe_reqdet.req_no$<>req_no$ or poe_reqdet.firm_id$<>firm_id$ then break
-			dim poe_podet$:fnget_tpl$("POE_PODET")
-			call stbl("+DIR_PGM")+"adc_copyfile.aon",poe_reqdet$,poe_podet$,status
-			poe_podet.po_no$=po_no$
-			poe_podet.qty_ordered=poe_reqdet.req_qty
-			write record (poe_podet_dev) poe_podet$
-
-			find record (poc_linecode_dev,key=firm_id$+poe_podet.po_line_code$,dom=*next)poc_linecode$
-			if poc_linecode.line_type$="S"
-				items$[0]=firm_id$
-				items$[1]=poe_podet.warehouse_id$
-				items$[2]=poe_podet.item_id$
-				refs[0]=poe_podet.qty_ordered*poe_podet.conv_factor
-				action$="OO"
-		                call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			endif
-
-			rem --- Update work order?
-
-			if callpoint!.getDevObject("SF_installed")<>"N" and pos(poc_linecode.line_type$="NS")<>0 and cvs(poe_podet.wo_no$,2)<>""
-				sfe_womatl_dev=fnget_dev("SFE_WOMATL")
-				sfe_wosubcnt_dev=fnget_dev("SFE_WOSUBCNT")
-				old_wo$=poe_podet.wo_no$
-				old_woseq$=poe_podet.wk_ord_seq_ref$
-				new_wo$=old_wo$
-				new_woseq$=old_woseq$
-				po_no$=poe_podet.po_no$
-				po_seq$=poe_podet.internal_seq_no$
-				call stbl("+DIR_PGM")+"poc_requpdate.aon",sfe_womatl_dev,sfe_wosubcnt_dev,
-:					po_no$,po_seq$,"P",poc_linecode.line_type$,old_wo$,old_woseq$,new_wo$,new_woseq$,status
-			endif
-
-			rem --- Update PO to OP link
-
-			if cvs(poe_pohdr.customer_id$+poe_pohdr.order_no$,2)<>""
-				dim poe_linked$:fattr(poe_linked$)
-				poe_linked.firm_id$=firm_id$
-				poe_linked.po_no$=poe_pohdr.po_no$
-				poe_linked.poedet_seq_ref$=poe_podet.internal_seq_no$
-				poe_linked.customer_id$=poe_pohdr.customer_id$
-				poe_linked.order_no$=poe_pohdr.order_no$
-				poe_linked.opedet_seq_ref$=poe_podet.so_int_seq_ref$
-				poe_linked$=field(poe_linked$)
-				write record (poe_linked_dev) poe_linked$
-			endif
-
-		wend
-
-		rem --- delete the requisition
-
-		status=0
-		dim files[20]
-    		files[2]=poc_linecode_dev
-		files[3]=poe_reqhdr_dev
-    		files[4]=poe_reqdet_dev
-    		files[5]=poe_reqprint_dev
-		files[11]=fnget_dev("SFE_WOMATL")
-		files[12]=fnget_dev("SFE_WOSUBCNT")
-		files[13]=poe_linked_dev
-	
-		sf_installed$=str(callpoint!.getDevObject("SF_installed"))
-        		dtl_tpl$=fattr(poe_reqdet$)
-        		hdr_pri_key$=poe_reqhdr.firm_id$+poe_reqhdr.req_no$
-       		hdr_alt_key1$=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$
-		dim ivs_params$:fnget_tpl$("IVS_PARAMS")
-		ivs_params$=str(callpoint!.getDevObject("ivs_params_rec"))
-        		call stbl("+DIR_PGM")+"poc_deletepo.aon","R",files[all],sf_installed$,ivs_params$,hdr_pri_key$,hdr_alt_key1$,dtl_tpl$,table_chans$[all],status
-
-		callpoint!.setStatus("RECORD:["+firm_id$+po_no$+"]")
-
-	else
-
-		callpoint!.setStatus("ABORT")
-
-	endif
-endif
-	
-[[POE_POHDR.ARNF]]
-rem -- set default values
-rem --- IV Params
-	ivs_params_chn=fnget_dev("IVS_PARAMS")
-	dim ivs_params$:fnget_tpl$("IVS_PARAMS")
-	read record(ivs_params_chn,key=firm_id$+"IV00")ivs_params$
-rem --- PO Params
-	pos_params_chn=fnget_dev("POS_PARAMS")
-	dim pos_params$:fnget_tpl$("POS_PARAMS")
-	read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
-rem --- Set Defaults
-	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL","",1)
-	callpoint!.setColumnData("POE_POHDR.WAREHOUSE_ID",ivs_params.warehouse_id$,1)
-	gosub whse_addr_info
-	callpoint!.setColumnData("POE_POHDR.ORD_DATE",sysinfo.system_date$,1)
-	callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",pos_params.po_frt_terms$,1)
-	callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",pos_params.ap_ship_via$,1)
-	callpoint!.setColumnData("POE_POHDR.FOB",pos_params.fob$,1)
-	callpoint!.setColumnData("POE_POHDR.HOLD_FLAG",pos_params.hold_flag$,1)
-	callpoint!.setColumnData("POE_POHDR.PO_MSG_CODE",pos_params.po_msg_code$,1)
-[[POE_POHDR.WAREHOUSE_ID.AVAL]]
-gosub whse_addr_info
-[[POE_POHDR.REQD_DATE.AVAL]]
-ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
-req_date$=cvs(callpoint!.getUserInput(),2)
-promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
-not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
-
-gosub validate_dates
-
-if bad_date$="" then gosub warn_dates
-[[POE_POHDR.NOT_B4_DATE.AVAL]]
-ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
-req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
-promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
-not_b4_date$=cvs(callpoint!.getUserInput(),2)
-
-gosub validate_dates
-[[POE_POHDR.PROMISE_DATE.AVAL]]
-ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
-req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
-promise_date$=cvs(callpoint!.getUserInput(),2)
-not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
-
-gosub validate_dates
-
-if bad_date$="" then gosub warn_dates
 [[POE_POHDR.BSHO]]
 rem print 'show';rem debug
 rem --- inits
@@ -895,31 +646,322 @@ rem --- store dtlGrid! and column for sales order line# reference listbutton (wi
 	dtlGrid!=dtlWin!.getControl(5900)
 	callpoint!.setDevObject("dtl_grid",dtlGrid!)
 	callpoint!.setDevObject("so_seq_ref_col",13)
+
+[[POE_POHDR.CUSTOMER_ID.AVAL]]
+if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID") then
+	rem --- if dropshipping, retrieve/display specified shipto address
+	callpoint!.setColumnData("POE_POHDR.ORDER_NO","",1)
+	callpoint!.setColumnData("POE_POHDR.SHIPTO_NO","",1)
+	callpoint!.setColumnData("POE_POHDR.DS_ADDR_LINE_1","",1)
+	callpoint!.setColumnData("POE_POHDR.DS_ADDR_LINE_2","",1)
+	callpoint!.setColumnData("POE_POHDR.DS_ADDR_LINE_3","",1)
+	callpoint!.setColumnData("POE_POHDR.DS_ADDR_LINE_4","",1)
+	callpoint!.setColumnData("POE_POHDR.DS_CITY","",1)
+	callpoint!.setColumnData("POE_POHDR.DS_NAME","",1)
+	callpoint!.setColumnData("POE_POHDR.DS_STATE_CD","",1)
+	callpoint!.setColumnData("POE_POHDR.DS_ZIP_CODE","",1)
+
+	tmp_customer_id$=callpoint!.getUserInput()
+	gosub shipto_cust;rem will refresh address w/ that from order once order# is entered
+endif
+
+[[POE_POHDR.DROPSHIP.AVAL]]
+rem --- if turning off dropship flag, clear devObject items
+
+dropship$=callpoint!.getUserInput()
+if dropship$="N"
+	callpoint!.setDevObject("ds_orders","N")
+	callpoint!.setDevObject("so_ldat","")
+	callpoint!.setDevObject("so_lines_list","")
+	callpoint!.setColumnData("POE_POHDR.ORDER_NO","",1)
+	callpoint!.setColumnData("POE_POHDR.SHIPTO_NO","",1)
+endif
+
+callpoint!.setColumnData("POE_POHDR.DROPSHIP",dropship$,1)
+gosub enable_dropship_fields
+
+[[POE_POHDR.NOT_B4_DATE.AVAL]]
+ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
+req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
+promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
+not_b4_date$=cvs(callpoint!.getUserInput(),2)
+
+gosub validate_dates
+
+[[POE_POHDR.ORDER_NO.AVAL]]
+rem --- if dropshipping, retrieve specified sales order and display shipto address
+
+if cvs(callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID"),3)<>""
+
+	tmp_customer_id$=callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID")
+	tmp_order_no$=callpoint!.getUserInput()
+
+	gosub dropship_shipto
+	gosub get_dropship_order_lines
+
+	if callpoint!.getDevObject("ds_orders")<>"Y" and cvs(callpoint!.getUserInput(),3)<>""
+		msg_id$="PO_NO_SO_LINES"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif			
+endif
+
+[[POE_POHDR.ORD_DATE.AVAL]]
+ord_date$=cvs(callpoint!.getUserInput(),2)
+req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
+promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
+not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
+
+gosub validate_dates
+
+[[POE_POHDR.PO_NO.AVAL]]
+rem --- don't allow user to assign new PO# -- use Barista seq#
+rem --- if user made null entry (to assign next seq automatically) then getRawUserInput() will be empty
+rem --- if not empty, then the user typed a number -- if an existing po, fine; if not, abort
+
+if cvs(callpoint!.getRawUserInput(),3)<>""
+	msk$=callpoint!.getTableColumnAttribute("POE_POHDR.PO_NO","MSKI")
+	find_po$=str(num(callpoint!.getRawUserInput()):msk$)
+	poe_pohdr_dev=fnget_dev("POE_POHDR")
+	dim poe_pohdr$:fnget_tpl$("POE_POHDR")
+	read record (poe_pohdr_dev,key=firm_id$+find_po$,dom=*next)poe_pohdr$
+	if poe_pohdr.firm_id$<>firm_id$ or  poe_pohdr.po_no$<>find_po$
+		msg_id$="PO_INVAL_PO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+endif
+
+[[POE_POHDR.PROMISE_DATE.AVAL]]
+ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
+req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
+promise_date$=cvs(callpoint!.getUserInput(),2)
+not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
+
+gosub validate_dates
+
+if bad_date$="" then gosub warn_dates
+
 [[POE_POHDR.PURCH_ADDR.AVAL]]
 vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
 purch_addr$=callpoint!.getUserInput()
 gosub purch_addr_info
-[[POE_POHDR.ARAR]]
-vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
-purch_addr$=callpoint!.getColumnData("POE_POHDR.PURCH_ADDR")
-gosub vendor_info
-gosub purch_addr_info
-gosub whse_addr_info
-gosub form_inits
 
-rem ---	depending on whether or not drop-ship flag is selected and OE is installed...
-rem ---	if drop-ship is selected, load up sales order line#'s for the detail grid's so reference listbutton
+[[POE_POHDR.REQD_DATE.AVAL]]
+ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
+req_date$=cvs(callpoint!.getUserInput(),2)
+promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
+not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
 
-callpoint!.setDevObject("so_lines_used","")
-if callpoint!.getColumnData("POE_POHDR.DROPSHIP")="Y"
+gosub validate_dates
 
-	if callpoint!.getDevObject("OP_installed")="Y"
-		tmp_customer_id$=callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID")
-		tmp_order_no$=callpoint!.getColumnData("POE_POHDR.ORDER_NO")
-		gosub get_dropship_order_lines
+if bad_date$="" then gosub warn_dates
+
+[[POE_POHDR.REQ_NO.AVAL]]
+rem --- Load PO from requisition
+
+req_no$=cvs(callpoint!.getUserInput(),3)
+if req_no$<>""
+
+	msg_id$="PO_CREATE_REQ"
+	gosub disp_message
+
+	if msg_opt$="Y"
+
+		rem --- write the po and podet recs, plus the print rec and poe_linked rec (if dropship)
+		rem --- also call atamo to adjust on order qty for S line types
+
+		status = 999
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if status then goto std_exit
+
+		poe_reqhdr_dev=fnget_dev("POE_REQHDR")
+		dim poe_reqhdr$:fnget_tpl$("POE_REQHDR")
+		poe_pohdr_dev=fnget_dev("POE_POHDR")
+		dim poe_pohdr$:fnget_tpl$("POE_POHDR")
+		poe_reqdet_dev=fnget_dev("POE_REQDET")
+		dim poe_reqdet$:fnget_tpl$("POE_REQDET")
+		poe_podet_dev=fnget_dev("POE_PODET")
+		poe_reqprint_dev=fnget_dev("POE_REQPRINT")
+
+		poe_linked_dev=fnget_dev("POE_LINKED")
+		dim poe_linked$:fnget_tpl$("POE_LINKED")
+		poe_poprint_dev=fnget_dev("POE_POPRINT")
+		dim poe_poprint$:fnget_tpl$("POE_POPRINT")
+		poc_linecode_dev=fnget_dev("POC_LINECODE")
+		dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+
+		po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+		req_no$=callpoint!.getUserInput()
+		
+		read record (poe_reqhdr_dev,key=firm_id$+req_no$,dom=*break) poe_reqhdr$
+		call stbl("+DIR_PGM")+"adc_copyfile.aon",poe_reqhdr$,poe_pohdr$,status	
+		poe_pohdr.po_no$=po_no$
+		write record (poe_pohdr_dev) poe_pohdr$
+
+		poe_poprint.firm_id$=firm_id$
+		poe_poprint.vendor_id$=poe_pohdr.vendor_id$
+		poe_poprint.po_no$=poe_pohdr.po_no$
+		write record (poe_poprint_dev)poe_poprint$
+
+		read record(poe_reqdet_dev,key=firm_id$+req_no$,dom=*next)
+
+		while 1
+			read record(poe_reqdet_dev,end=*break) poe_reqdet$
+			if poe_reqdet.req_no$<>req_no$ or poe_reqdet.firm_id$<>firm_id$ then break
+			dim poe_podet$:fnget_tpl$("POE_PODET")
+			call stbl("+DIR_PGM")+"adc_copyfile.aon",poe_reqdet$,poe_podet$,status
+			poe_podet.po_no$=po_no$
+			poe_podet.qty_ordered=poe_reqdet.req_qty
+			write record (poe_podet_dev) poe_podet$
+
+			find record (poc_linecode_dev,key=firm_id$+poe_podet.po_line_code$,dom=*next)poc_linecode$
+			if poc_linecode.line_type$="S"
+				items$[0]=firm_id$
+				items$[1]=poe_podet.warehouse_id$
+				items$[2]=poe_podet.item_id$
+				refs[0]=poe_podet.qty_ordered*poe_podet.conv_factor
+				action$="OO"
+		                call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			endif
+
+			rem --- Update work order?
+
+			if callpoint!.getDevObject("SF_installed")<>"N" and pos(poc_linecode.line_type$="NS")<>0 and cvs(poe_podet.wo_no$,2)<>""
+				sfe_womatl_dev=fnget_dev("SFE_WOMATL")
+				sfe_wosubcnt_dev=fnget_dev("SFE_WOSUBCNT")
+				old_wo$=poe_podet.wo_no$
+				old_woseq$=poe_podet.wk_ord_seq_ref$
+				new_wo$=old_wo$
+				new_woseq$=old_woseq$
+				po_no$=poe_podet.po_no$
+				po_seq$=poe_podet.internal_seq_no$
+				call stbl("+DIR_PGM")+"poc_requpdate.aon",sfe_womatl_dev,sfe_wosubcnt_dev,
+:					po_no$,po_seq$,"P",poc_linecode.line_type$,old_wo$,old_woseq$,new_wo$,new_woseq$,status
+			endif
+
+			rem --- Update PO to OP link
+
+			if cvs(poe_pohdr.customer_id$+poe_pohdr.order_no$,2)<>""
+				dim poe_linked$:fattr(poe_linked$)
+				poe_linked.firm_id$=firm_id$
+				poe_linked.po_no$=poe_pohdr.po_no$
+				poe_linked.poedet_seq_ref$=poe_podet.internal_seq_no$
+				poe_linked.customer_id$=poe_pohdr.customer_id$
+				poe_linked.order_no$=poe_pohdr.order_no$
+				poe_linked.opedet_seq_ref$=poe_podet.so_int_seq_ref$
+				poe_linked$=field(poe_linked$)
+				write record (poe_linked_dev) poe_linked$
+			endif
+
+		wend
+
+		rem --- delete the requisition
+
+		status=0
+		dim files[20]
+    		files[2]=poc_linecode_dev
+		files[3]=poe_reqhdr_dev
+    		files[4]=poe_reqdet_dev
+    		files[5]=poe_reqprint_dev
+		files[11]=fnget_dev("SFE_WOMATL")
+		files[12]=fnget_dev("SFE_WOSUBCNT")
+		files[13]=poe_linked_dev
+	
+		sf_installed$=str(callpoint!.getDevObject("SF_installed"))
+        		dtl_tpl$=fattr(poe_reqdet$)
+        		hdr_pri_key$=poe_reqhdr.firm_id$+poe_reqhdr.req_no$
+       		hdr_alt_key1$=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$
+		dim ivs_params$:fnget_tpl$("IVS_PARAMS")
+		ivs_params$=str(callpoint!.getDevObject("ivs_params_rec"))
+        		call stbl("+DIR_PGM")+"poc_deletepo.aon","R",files[all],sf_installed$,ivs_params$,hdr_pri_key$,hdr_alt_key1$,dtl_tpl$,table_chans$[all],status
+
+		callpoint!.setStatus("RECORD:["+firm_id$+po_no$+"]")
+
+	else
+
+		callpoint!.setStatus("ABORT")
 
 	endif
 endif
+	
+
+[[POE_POHDR.SHIPTO_NO.AVAL]]
+rem --- if dropshipping, retrieve/display specified shipto address
+
+	shipto$=cvs(callpoint!.getUserInput(),3)
+	tmp_customer_id$=callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID")
+	
+	if shipto$="" then
+		rem --- no shipto, so use customer's address
+		gosub shipto_cust
+	else
+		arm_custship_dev=fnget_dev("ARM_CUSTSHIP")
+		dim arm_custship$:fnget_tpl$("ARM_CUSTSHIP")
+		read record (arm_custship_dev,key=firm_id$+tmp_customer_id$+shipto$,dom=*next)arm_custship$
+		dim rec$:fattr(arm_custship$)
+		rec$=arm_custship$
+		gosub fill_dropship_address
+		callpoint!.setColumnData("POE_POHDR.DS_NAME",rec.name$,1)
+	endif
+
+[[POE_POHDR.VENDOR_ID.AVAL]]
+rem --- Update vendor info if vendor changed
+rem "VENDOR INACTIVE - FEATURE"
+vendor_id$ = callpoint!.getUserInput()
+apm01_dev=fnget_dev("APM_VENDMAST")
+apm01_tpl$=fnget_tpl$("APM_VENDMAST")
+dim apm01a$:apm01_tpl$
+apm01a_key$=firm_id$+vendor_id$
+find record (apm01_dev,key=apm01a_key$,err=*break) apm01a$
+if apm01a.vend_inactive$="Y" then
+   call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+   msg_id$="AP_VEND_INACTIVE"
+   dim msg_tokens$[2]
+   msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+   msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
+   gosub disp_message
+   callpoint!.setStatus("ACTIVATE-ABORT")
+   goto std_exit
+endif
+
+	if vendor_id$<>callpoint!.getColumnData("POE_POHDR.VENDOR_ID") then
+		gosub vendor_info
+		gosub disp_vendor_comments
+
+		rem --- Set defaults from Parameter record
+		pos_params_chn=fnget_dev("POS_PARAMS")
+		dim pos_params$:fnget_tpl$("POS_PARAMS")
+		read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
+		callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",pos_params.po_frt_terms$,1)
+		callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",pos_params.ap_ship_via$,1)
+		callpoint!.setColumnData("POE_POHDR.FOB",pos_params.fob$,1)
+
+		rem --- Now override the defaults with the Vendor info if not blank
+		if cvs(apm01a.ap_ship_via$,3)<>""
+			callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",apm01a.ap_ship_via$,1)
+		endif
+		if cvs(apm01a.fob$,3)<>""
+			callpoint!.setColumnData("POE_POHDR.FOB",apm01a.fob$,1)
+		endif
+		if cvs(apm01a.po_frt_terms$,3)<>""
+			callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",apm01a.po_frt_terms$,1)
+		endif
+
+		rem --- Use Terms Code from vendor's first AP type record
+		apm02_dev=fnget_dev("APM_VENDHIST")
+		dim apm02a$:fnget_tpl$("APM_VENDHIST")
+		read(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
+		tmp$=key(apm02_dev,end=done_apm_vendhist)
+		if pos(firm_id$+vendor_id$=tmp$)<>1 then goto done_apm_vendhist
+		readrecord(apm02_dev,key=tmp$)apm02a$
+		done_apm_vendhist:
+		callpoint!.setColumnData("POE_POHDR.AP_TERMS_CODE",apm02a.ap_terms_code$,1)
+	endif
+
+[[POE_POHDR.WAREHOUSE_ID.AVAL]]
+gosub whse_addr_info
+
 [[POE_POHDR.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
 vendor_info: rem --- get and display Vendor Information
@@ -1282,3 +1324,6 @@ warn_dates: rem --- warn about possible bad dates
 	endif
 
 return
+
+
+
