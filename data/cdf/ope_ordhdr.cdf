@@ -55,11 +55,12 @@ rem --- clear availability
 
 [[OPE_ORDHDR.ADIS]]
 rem --- Finish changing customer for this order
-	if cvs(callpoint!.getDevObject("RemoveThisRecord"),2)<>"" then
+	removeThisRecord$=callpoint!.getDevObject("RemoveThisRecord")
+	callpoint!.setDevObject("RemoveThisRecord","")
+	if removeThisRecord$<>"" then
 		rem --- Remove order records for the previous customer
 		optInvHdr_dev2=fnget_dev("2_OPT_INVHDR")
 		dim previous_optInvHdr$:fnget_tpl$("OPT_INVHDR")
-		removeThisRecord$=callpoint!.getDevObject("RemoveThisRecord")
 		findrecord(optInvHdr_dev2,key=removeThisRecord$,knum="AO_STATUS",dom=*next)previous_optInvHdr$
 		previous_arType$=previous_optInvHdr.ar_type$
 		previous_customerId$=previous_optInvHdr.customer_id$
@@ -166,7 +167,7 @@ rem --- Show customer data
 		gosub check_credit
 
 		rem --- Finish changing customer for this order. Show Credit Status for the new customer.
-		if cvs(callpoint!.getDevObject("RemoveThisRecord"),2)<>"" then
+		if removeThisRecord$<>"" then
 			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
 				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, "", table_chans$[all], callpoint!, status
 				callpoint!.setDevObject("credit_status_done", "Y")
