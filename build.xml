@@ -208,7 +208,7 @@
         <echo message="WriteConfigurationFiles -cdstore -barista -addon"/>
         <echo message="  basedir: ${basedir}"/>
         <echo message="  install.dir: ${install.dir}"/>
-        <java classname="com.basis.install.IS.WriteConfigurationFiles" dir="${basedir}" fork="true">
+        <java classname="com.basis.install.util.WriteConfigurationFiles" dir="${basedir}" fork="true">
             <classpath refid="path.install.WriteConfigFiles"/>
             <arg value="${install.dir}"/>
             <arg value="-cdstore"/>
