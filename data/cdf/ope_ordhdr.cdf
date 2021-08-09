@@ -608,6 +608,9 @@ rem --- Update order detail records for new customer
 		rem --- Re-print Picking List for new customer
 		optInvDet.pick_flag$="N"
 
+		rem --- Use calculated Unit Price for new customer
+		optInvDet.man_price$="N"
+
 		rem ---Update order detail pricing for new customer
 		redim ivm01a$
 		findrecord(ivm01_dev,key=firm_id$+optInvDet.item_id$,dom=*next)ivm01a$
