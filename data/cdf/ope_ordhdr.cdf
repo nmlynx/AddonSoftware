@@ -539,6 +539,9 @@ rem --- Update and write new order records for the new customer
 	optInvHdr.shipto_type$="B"
 	optInvHdr.shipto_no$=""
 
+	rem --- Zero freight amount for new customer's ship-to address
+	optInvHdr.freight_amt=0
+
 	rem --- Re-send acknowledgement for new customer
 	optInvHdr.ord_conf_printed$ = "N"
 
