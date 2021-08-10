@@ -1839,24 +1839,6 @@ rem --- Is record deleted?
 		break; rem --- exit callpoint
 	endif
 
-rem --- Is flag down?
-
-	if !user_tpl.do_end_of_form then
-		user_tpl.do_end_of_form = 1
-		break; rem --- exit callpoint
-	endif	
-
-rem --- Credit action
-
-	rem --- Header record will exist if at least one detail line has been entered.
-	if GridVect!.getItem(0).size()>0 then
-		if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
-			callpoint!.setDevObject("cred_action_from_print_now","")
-			gosub do_credit_action
-			if action$<>"D" then callpoint!.setStatus("SAVE")
-		endif
-	endif
-
 rem --- Launch ope_createwos form to create selected work orders
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
@@ -1942,6 +1924,24 @@ rem --- Skip Acknowledgements for quotes
 			cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 			order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 			call stbl("+DIR_PGM")+"opc_ordconf.aon::auto_on_demand", cust_id$, order_no$, rd_table_chans$[all], status
+		endif
+	endif
+
+rem --- Is flag down?
+
+	if !user_tpl.do_end_of_form then
+		user_tpl.do_end_of_form = 1
+		break; rem --- exit callpoint
+	endif	
+
+rem --- Credit action
+
+	rem --- Header record will exist if at least one detail line has been entered.
+	if GridVect!.getItem(0).size()>0 then
+		if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
+			callpoint!.setDevObject("cred_action_from_print_now","")
+			gosub do_credit_action
+			if action$<>"D" then callpoint!.setStatus("SAVE")
 		endif
 	endif
 
