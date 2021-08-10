@@ -48,6 +48,13 @@ rem --- Update paid_code for selected grid rows
 		next i
 	endif
 
+[[GLT_BANKCHECKS.AREA]]
+rem --- Skip checks after current statement date
+	stmtdate$=callpoint!.getDevObject("stmtdate")
+	if callpoint!.getColumnData("GLT_BANKCHECKS.BNK_CHK_DATE")>stmtdate$ then
+		callpoint!.setStatus("SKIP")
+	endif
+
 [[GLT_BANKCHECKS.BSHO]]
 rem --- Add pop-up menu to match ListButton items for paid_code
 	popUpMenu!=SysGUI!.addPopupMenu()
