@@ -48,6 +48,13 @@ rem --- Update posted_code for selected grid rows
 		next i
 	endif
 
+[[GLT_BANKOTHER.AREA]]
+rem --- Skip transactions after current statement date
+	stmtdate$=callpoint!.getDevObject("stmtdate")
+	if callpoint!.getColumnData("GLT_BANKOTHER.TRNS_DATE")>stmtdate$ then
+		callpoint!.setStatus("SKIP")
+	endif
+
 [[GLT_BANKOTHER.BSHO]]
 rem --- Open/Lock files
 	num_files=1

@@ -208,6 +208,11 @@ rem --- Disable prior statement date/amt (will enable if there is no prior info 
 	callpoint!.setColumnEnabled("GLM_BANKMASTER.PRI_END_DATE",0)
 	callpoint!.setColumnEnabled("GLM_BANKMASTER.PRI_END_AMT",0)
 
+[[GLM_BANKMASTER.BDTW]]
+rem --- Pass current statement date to check detail and other transaction listings
+	stmtdate$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
+	callpoint!.setDevObject("stmtdate",stmtdate$)
+
 [[GLM_BANKMASTER.BNK_ACCT_CD.AVAL]]
 rem --- Display Bank Account Information
 	bnk_acct_cd$=callpoint!.getUserInput()
