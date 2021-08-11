@@ -509,6 +509,7 @@ class public PackagerExtractor
         print(log_dev)"Copy Addon Installation Utility log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
         print(log_dev)
         print(log_dev)"Source Operating System: " + info(0,0)
+        print (log_dev) "Source BBj Installation Directory: " + System.getProperty("basis.BBjHome")
         print(log_dev)"Source Installation Base Directory: " + baseDir$
         print(log_dev)"Source Barista Installation Location: " + barDir$
         print(log_dev)"Archive Filename: " + jarFile$
@@ -1201,8 +1202,14 @@ verify_path: rem --- Verify path is located under installation base directory
         gosub resolvePathStbls
     
         resolvedPath!=new java.io.File(resolvedPath$)
-        canonicalPath$=resolvedPath!.getCanonicalPath()
-        if pos(baseDir$=canonicalPath$)=1 then
+        
+        isUrl=resolvedPath!.getPath().matches("^https?:.*")
+        
+        if !isUrl then 
+            canonicalPath$=resolvedPath!.getCanonicalPath()
+        endif
+        
+        if !isUrl and pos(baseDir$=canonicalPath$)=1 then
             rem --- Good path
             sourcePaths!.setProperty(path$,canonicalPath$)
         else
@@ -1429,8 +1436,12 @@ std_exit:
         
         rem -- validate installation directory
         installationLocation!=#ExtractorInstallationLocationEB!.getText()
-        print "InstallationLocation=",installationLocation!
         if (installationLocation!<>"")  then 
+            installationLocation!=new File(installationLocation!).getCanonicalPath()
+            if (! installationLocation!.endsWith(File.separator)) then 
+                installationLocation!=installationLocation!.concat(File.separator)
+            endif 
+            #ExtractorInstallationLocationEB!.setText(installationLocation!)
             status$=#validateExtractorInstallationLocation(installationLocation!)
             isExtractorInstallationLocationReady!=(status$="")
             if (isExtractorInstallationLocationReady!) then 
@@ -1445,6 +1456,11 @@ std_exit:
         rem -- validate barista directory 
         baristaLocation!=#ExtractorBaristaLocationEB!.getText()
         if (baristaLocation!<>"") then
+            baristaLocation!=new File(baristaLocation!).getCanonicalPath()
+            if (! baristaLocation!.endsWith(File.separator)) then 
+                baristaLocation!=baristaLocation!.concat(File.separator)
+            endif 
+            #ExtractorBaristaLocationEB!.setText(baristaLocation!)
             status$=#validateExtractorBaristaLocation(baristaLocation!)
             isExtractorBaristaLocationReady!=(status$="") 
             if (isExtractorBaristaLocationReady!) then 
@@ -1540,8 +1556,9 @@ std_exit:
     
       rem --- write log header info
       print(log_dev)"Install Copied Addon Installation Utility log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
-      print(log_dev)
+      print(log_dev)"Destination BBj Installation: "+System.getProperty("basis.BBjHome")
       print(log_dev)"Source Operating System: " + info(0,0)
+      print(log_dev)
       print(log_dev)"New Database Name: " + dbName$
       print(log_dev)"Source Installation Base Directory: " + baseDir$
       print(log_dev)"Jar Filename: " + jarFile$
@@ -1678,6 +1695,9 @@ std_exit:
                   canonicalPath$=line$(pos("::::"=line$)+4)
                   sourcePaths!.setProperty(path$,canonicalPath$)
                   break
+              case key$="Source BBj Installation Directory:"
+                  sourceBBjDir$=cvs(line$(pos(":"=line$)+1),3)
+                  sourceBBjDirLen=len(sourceBBjDir$)
               case default
                   break
           swend
@@ -2342,9 +2362,25 @@ std_exit:
                       if line$="" then continue
   
                       if pos("PREFIX "=line$)=1 then
+                          
+                          rem --- replace the original BBj path in the PREFIX with the new BBj path
                           line!=line$
                           line$=line!.replace("\","/")
-                          last_pos=pos(bbjHome$=line$,-1)
+                          
+                          if (sourceBBjDir$<>"") then 
+                            sourceBBjDir!=sourceBBjDir$
+                            sourceBBjDir$=sourceBBjDir!.replace("\","/")
+                            bbjHome!=bbjHome$
+                            bbjHome$=bbjHome!.replace("\","/")
+                            line$=line!.replace(sourceBBjDir$,bbjHome$)
+                          endif 
+                          
+                          rem -- Put the new paths at the end of the BBj Home paths. (Can we really assume this order of paths?) 
+                          if (bbjHome$="") then
+                            last_pos=len(line$)
+                          else 
+                            last_pos=pos(bbjHome$=line$,-1)
+                          endif
                           if last_pos>0 then
                               end_pos=last_pos+pos(" "=line$(last_pos))
                               line$=line$(1,end_pos-1)
@@ -2356,6 +2392,15 @@ std_exit:
                               next xwk
                           endif
                       endif
+                      
+                      REM Process DSKSYN Lines
+                      current_drive$=dsk("")
+                      if (pos("DSKSYN"=line$)=1) then
+                        driveToCheck$=cvs(line$(7),3)
+                        setdrive driveToCheck$,err=keep_dsksyn
+                        continue
+                      endif
+                      keep_dsksyn:
                   
                       key$=cvs(line$(1,pos("="=line$)-1),3)
                       switch (BBjAPI().TRUE)
