@@ -277,6 +277,10 @@ class public TGZFile
                 Files.createDirectories(diskPath!,permissionsArray!)
             else 
                 array!=#DefaultCopyOptions!
+                rem -- if this file is being copied out before its parent directory is created, create the parent diectory
+                if (! Files.exists(diskPath!.getParent())) then 
+                    Files.createDirectories(diskPath!.getParent(),permissionsArray!)
+                endif 
                 Files.copy(#m_tis!,diskPath!,array!,err=handle_copy_error)
             endif 
             
