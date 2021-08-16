@@ -470,14 +470,21 @@ rem --- Launch ope_custchng form to change current customer
 	customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	ar_inv_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
+	invoice_type$=callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
 	current_key$=callpoint!.getRecordKey()
 
 
-	dim dflt_data$[2,1]
+	dim dflt_data$[3,1]
 	dflt_data$[1,0] = "ORDER_NO"
 	dflt_data$[1,1] = order_no$
 	dflt_data$[2,0] = "CURR_CUSTOMER_ID"
 	dflt_data$[2,1] = customer_id$
+	dflt_data$[3,0] = "RECALCULATE"
+	if invoice_type$="P" then
+		dflt_data$[3,1] = "0"
+	else
+		dflt_data$[3,1] = "1"
+	endif
 
 	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :		"OPE_CUSTCHNG", 
@@ -530,6 +537,9 @@ rem --- Update and write new order records for the new customer
 	dim optInvHdr$:fnget_tpl$("OPT_INVHDR")
 	optInvHdrDev2_key$=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+customer_id$+order_no$+ar_inv_no$
 	readrecord(optInvHdr_dev2,key=optInvHdrDev2_key$,knum="PRIMARY")optInvHdr$
+
+	rem --- Recalculate item prices and order Discount Amount?
+	recalcPriceDiscAmt=num(callpoint!.getDevObject("recalcPriceDiscAmt"))
 
 	rem --- Update order header record new customer
 	newCustomerId$=callpoint!.getDevObject("newCustomerId")
@@ -608,63 +618,65 @@ rem --- Update order detail records for new customer
 		rem --- Re-print Picking List for new customer
 		optInvDet.pick_flag$="N"
 
-		rem --- Use calculated Unit Price for new customer
-		optInvDet.man_price$="N"
-
 		rem ---Update order detail pricing for new customer
-		redim ivm01a$
-		findrecord(ivm01_dev,key=firm_id$+optInvDet.item_id$,dom=*next)ivm01a$
-		redim opc_linecode$
-		findrecord(opc_linecode_dev,key=firm_id$+optInvDet.line_code$,dom=*next)opc_linecode$
-		if pos(opc_linecode.line_type$="SP") and optInvDet.qty_ordered<>0 then
-			rem --- Do repricing (see OPE_ORDDET and OPE_ORDDET pricing subroutines)
-			qty_ord=optInvDet.qty_ordered
-			conv_factor=optInvDet.conv_factor
-			if conv_factor=0 then conv_factor=1
+		if recalcPriceDiscAmt then
+			rem --- Use calculated Unit Price for new customer
+			optInvDet.man_price$="N"
+
+			redim ivm01a$
+			findrecord(ivm01_dev,key=firm_id$+optInvDet.item_id$,dom=*next)ivm01a$
+			redim opc_linecode$
+			findrecord(opc_linecode_dev,key=firm_id$+optInvDet.line_code$,dom=*next)opc_linecode$
+			if pos(opc_linecode.line_type$="SP") and optInvDet.qty_ordered<>0 then
+				rem --- Do repricing (see OPE_ORDDET and OPE_ORDDET pricing subroutines)
+				qty_ord=optInvDet.qty_ordered
+				conv_factor=optInvDet.conv_factor
+				if conv_factor=0 then conv_factor=1
 
 
-			call stbl("+DIR_PGM")+"opc_pricing.aon",
-:				pc_files[all],
-:				firm_id$,
-:				optInvDet.warehouse_id$,
-:				optInvDet.item_id$,
-:				user_tpl.price_code$,
-:				newCustomerId$,
-:				optInvHdr.order_date$,
-:				optInvHdr.price_code$,
-:				qty_ord*conv_factor,
-:				typeflag$,
-:				price,
-:				disc,
-:				status
+				call stbl("+DIR_PGM")+"opc_pricing.aon",
+:					pc_files[all],
+:					firm_id$,
+:					optInvDet.warehouse_id$,
+:					optInvDet.item_id$,
+:					user_tpl.price_code$,
+:					newCustomerId$,
+:					optInvHdr.order_date$,
+:					optInvHdr.price_code$,
+:					qty_ord*conv_factor,
+:					typeflag$,
+:					price,
+:					disc,
+:					status
 
-			if status=0 then
-				optInvDet.unit_price=price
-				optInvDet.disc_percent=disc
+				if status=0 then
+					optInvDet.unit_price=price
+					optInvDet.disc_percent=disc
 
-				if disc=100 then
-					redim ivm02a$
-					findrecord(ivm02_dev,key=firm_id$+optInvDet.warehouse_id$+optInvDet.item_id$,dom=*next)imv02a$
-					optInvDet.std_list_prc=ivm02a.cur_price
-				else
-					optInvDet.std_list_prc=round((price*100) / (100-disc), round_precision)
+					if disc=100 then
+						redim ivm02a$
+						findrecord(ivm02_dev,key=firm_id$+optInvDet.warehouse_id$+optInvDet.item_id$,dom=*next)imv02a$
+						optInvDet.std_list_prc=ivm02a.cur_price
+					else
+						optInvDet.std_list_prc=round((price*100) / (100-disc), round_precision)
+					endif
+
+					optInvDet.ext_price=round(optInvDet.qty_shipped * price, 2)
 				endif
-
-				optInvDet.ext_price=round(optInvDet.qty_shipped * price, 2)
 			endif
-		endif
 
-		rem --- Update order detail taxable_amt for new customer (see OPE_ORDDET AGRE)
-		if (opc_linecode.taxable_flag$ = "Y" and ( pos(opc_linecode.line_type$ = "OMN") or ivm01a.taxable_flag$ = "Y" )) or
-: 		callpoint!.getDevObject("use_tax_service")="Y" then
-			optInvDet.taxable_amt=optInvDet.ext_price
-		endif
+			rem --- Update order detail taxable_amt for new customer (see OPE_ORDDET AGRE)
+			if (opc_linecode.taxable_flag$ = "Y" and ( pos(opc_linecode.line_type$ = "OMN") or ivm01a.taxable_flag$ = "Y" )) or
+: 			callpoint!.getDevObject("use_tax_service")="Y" then
+				optInvDet.taxable_amt=optInvDet.ext_price
+			endif
 	
-		rem --- For uncommitted "O" line type sales (not quotes), move ext_price to unit_price until committed (see OPE_ORDDET AGRE)
-		if optInvHdr.invoice_type$<>"P" and optInvDet.commit_flag$="N" and opc_linecode.line_type$="O" and optInvDet.ext_price<>0 then
-			optInvDet.unit_price=optInvDet.ext_price
-			optInvDet.ext_price=0
-			optInvDet.taxable_amt=0
+			rem --- For uncommitted "O" line type sales (not quotes), move ext_price to unit_price until committed (see OPE_ORDDET AGRE)
+			if optInvHdr.invoice_type$<>"P" and optInvDet.commit_flag$="N" and opc_linecode.line_type$="O" and optInvDet.ext_price<>0 then
+				optInvDet.unit_price=optInvDet.ext_price
+				optInvDet.ext_price=0
+				optInvDet.taxable_amt=0
+			endif
 		endif
 
 		rem --- Sum total sales for order header
@@ -681,11 +693,13 @@ rem --- Update order detail records for new customer
 	optInvHdr.total_sales=hdr_total_sales
 
 	rem --- Update order discount_amt for new customer (see DISC_CODE AVAL)
-	disccode_dev = fnget_dev("OPC_DISCCODE")
-	dim disccode_rec$:fnget_tpl$("OPC_DISCCODE")
-	find record (disccode_dev, key=firm_id$+optInvHdr.disc_code$, dom=*next) disccode_rec$
-	new_disc_amt = round(disccode_rec.disc_percent *hdr_total_sales/100, 2)
-	optInvHdr.discount_amt=new_disc_amt
+	if recalcPriceDiscAmt then
+		disccode_dev = fnget_dev("OPC_DISCCODE")
+		dim disccode_rec$:fnget_tpl$("OPC_DISCCODE")
+		find record (disccode_dev, key=firm_id$+optInvHdr.disc_code$, dom=*next) disccode_rec$
+		new_disc_amt = round(disccode_rec.disc_percent *hdr_total_sales/100, 2)
+		optInvHdr.discount_amt=new_disc_amt
+	endif
 
 	rem --- Force order sales tax re-calculation for new customer
 	rem --- Order taxable_amt and tax_amount are updated in ADIS when order is re-displayed for new customer
