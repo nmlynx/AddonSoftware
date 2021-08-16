@@ -54,6 +54,67 @@ rem --- clear availability
 	gosub clear_avail
 
 [[OPE_ORDHDR.ADIS]]
+rem --- Finish changing customer for this order
+	removeThisRecord$=callpoint!.getDevObject("RemoveThisRecord")
+	callpoint!.setDevObject("RemoveThisRecord","")
+	if removeThisRecord$<>"" then
+		rem --- Remove order records for the previous customer
+		optInvHdr_dev2=fnget_dev("2_OPT_INVHDR")
+		dim previous_optInvHdr$:fnget_tpl$("OPT_INVHDR")
+		findrecord(optInvHdr_dev2,key=removeThisRecord$,knum="AO_STATUS",dom=*next)previous_optInvHdr$
+		previous_arType$=previous_optInvHdr.ar_type$
+		previous_customerId$=previous_optInvHdr.customer_id$
+		previous_orderNo$=previous_optInvHdr.order_no$
+		previous_invoiceNo$=previous_optInvHdr.ar_inv_no$
+		previous_orderDate$=previous_optInvHdr.order_date$
+		previous_optInvHdr_key$=firm_id$+previous_arType$+previous_customerId$+previous_orderNo$+previous_invoiceNo$
+
+		rem --- Remove OPE_ORDHDR record for the previous customer
+		if cvs(previous_customerId$,2)<>"" then
+			remove(optInvHdr_dev2,key=previous_optInvHdr_key$)
+
+			rem --- Remove OPE_ORDDET records for the previous customer
+			optInvDet_dev2=fnget_dev("2_OPT_INVDET")
+			read(optInvDet_dev2,key=previous_optInvHdr_key$,knum="PRIMARY",dom=*next)
+			while 1
+				optInvDet_key2$=key(optInvDet_dev2,end=*break)
+				if pos(previous_optInvHdr_key$=optInvDet_key2$)<>1 then break
+				remove(optInvDet_dev2,key=optInvDet_key2$)
+			wend
+
+			rem --- Remove OPE_ORDLSDET records for the previous customer
+			opeOrdLSDet_dev2=fnget_dev("2_OPE_ORDLSDET")
+			read(opeOrdLSDet_dev2,key=previous_optInvHdr_key$,knum="PRIMARY",dom=*next)
+			while 1
+				opeOrdLSDet_key2$=key(opeOrdLSDet_dev2,end=*break)
+				if pos(previous_optInvHdr_key$=opeOrdLSDet_key2$)<>1 then break
+				remove(opeOrdLSDet_dev2,key=opeOrdLSDet_key2$)
+			wend
+
+			rem --- Remove OPE_ORDSHIP record for the previous customer
+			opeOrdShip_dev=fnget_dev("OPE_ORDSHIP")
+			opeOrdShip_key$=firm_id$+previous_customerId$+previous_orderNo$+previous_invoiceNo$
+			find(opeOrdShip_dev,key=opeOrdShip_key$,knum="PRIMARY", dom=*next)x$
+			remove(opeOrdShip_dev,key=opeOrdShip_key$,dom=*next)
+
+			rem --- Remove OPE_PRNTLIST record for the previous customer
+			opePrntList_dev=fnget_dev("OPE_PRNTLIST")
+			opePrntList_key$=firm_id$+"O"+previous_arType$+previous_customerId$+previous_orderNo$
+			find(opePrntList_dev,key=opePrntList_key$,knum="PRIMARY", dom=*next)x$
+			remove(opePrntList_dev,key=opePrntList_key$,dom=*next)
+
+			rem --- Remove OPE_CREDDATE record for the previous customer
+			opeCredDate_dev=fnget_dev("OPE_CREDDATE")
+			opeCredDate_key$=firm_id$+previous_orderDate$+previous_customerId$+previous_orderNo$
+			remove(opeCredDate_dev,key=opeCredDate_key$,dom=*next)
+		endif
+
+		rem --- ADIS, Re-calculate order sales tax for the new customer
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
+
 rem --- Check for void
 
 	if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") = "V" then
@@ -104,6 +165,15 @@ rem --- Show customer data
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
 		gosub check_credit
+
+		rem --- Finish changing customer for this order. Show Credit Status for the new customer.
+		if removeThisRecord$<>"" then
+			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
+				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, "", table_chans$[all], callpoint!, status
+				callpoint!.setDevObject("credit_status_done", "Y")
+				callpoint!.setStatus("ACTIVATE")
+			endif
+		endif
 	endif
 
 	gosub disp_cust_comments
@@ -128,6 +198,8 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("SHPT",1)
 	callpoint!.setOptionEnabled("AGNG",iff(callpoint!.getDevObject("on_demand_aging")="Y",1,0))
 	if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then callpoint!.setOptionEnabled("OACK",1)
+	callpoint!.setOptionEnabled("CUST",1)
+
 
 rem --- Set all previous values
 
@@ -393,6 +465,295 @@ rem --- Do credit status (management)
 		callpoint!.setStatus("ACTIVATE")
 	endif
 
+[[OPE_ORDHDR.AOPT-CUST]]
+rem --- Launch ope_custchng form to change current customer
+	customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ar_inv_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
+	invoice_type$=callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
+	current_key$=callpoint!.getRecordKey()
+
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0] = "ORDER_NO"
+	dflt_data$[1,1] = order_no$
+	dflt_data$[2,0] = "CURR_CUSTOMER_ID"
+	dflt_data$[2,1] = customer_id$
+	dflt_data$[3,0] = "RECALCULATE"
+	if invoice_type$="P" then
+		dflt_data$[3,1] = "0"
+	else
+		dflt_data$[3,1] = "1"
+	endif
+
+	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:		"OPE_CUSTCHNG", 
+:		stbl("+USER_ID"), 
+:		"", 
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
+	rem --- Make sure focus returns to this form
+	callpoint!.setStatus("ACTIVATE")
+
+rem --- Handle abort from new Change Order/Quote Customer form
+	if callpoint!.getDevObject("customerChange_status")="Cancel" then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Save modified records before updating current order for the new customer
+	if pos("M"=callpoint!.getRecordStatus())
+		rem --- Add Barista soft lock for this record if not already in edit mode
+		if !callpoint!.isEditMode() then
+			rem --- Is there an existing soft lock?
+			lock_table$="OPT_INVHDR"
+			lock_record$=current_key$
+			lock_type$="C"
+			lock_status$=""
+			lock_disp$=""
+			call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+			if lock_status$="" then
+				rem --- Add temporary soft lock used just for this task
+				lock_type$="L"
+				call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+			else
+				rem --- Record locked by someone else
+				msg_id$="ENTRY_REC_LOCKED"
+				gosub disp_message
+				break
+			endif
+		endif
+
+		rem --- Get current form data and write it to disk
+		gosub get_disk_rec
+		write record (ordhdr_dev) ordhdr_rec$
+	endif
+
+rem --- Update and write new order records for the new customer
+	optInvHdr_dev2=fnget_dev("2_OPT_INVHDR")
+	dim optInvHdr$:fnget_tpl$("OPT_INVHDR")
+	optInvHdrDev2_key$=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+customer_id$+order_no$+ar_inv_no$
+	readrecord(optInvHdr_dev2,key=optInvHdrDev2_key$,knum="PRIMARY")optInvHdr$
+
+	rem --- Recalculate item prices and order Discount Amount?
+	recalcPriceDiscAmt=num(callpoint!.getDevObject("recalcPriceDiscAmt"))
+
+	rem --- Update order header record new customer
+	newCustomerId$=callpoint!.getDevObject("newCustomerId")
+	optInvHdr.customer_id$=newCustomerId$
+
+	rem --- Default order to new customer Bill-To Address
+	optInvHdr.shipto_type$="B"
+	optInvHdr.shipto_no$=""
+
+	rem --- Zero freight amount for new customer's ship-to address
+	optInvHdr.freight_amt=0
+
+	rem --- Re-send acknowledgement for new customer
+	optInvHdr.ord_conf_printed$ = "N"
+
+	rem --- Re-print Picking List for new customer
+	optInvHdr.print_status$="N"
+	optInvHdr.lock_status$="N"
+	optInvHdr.reprint_flag$=""
+
+	rem --- Order not a cash sale for new customer
+	optInvHdr.cash_sale$="N"
+
+	rem --- Get needed customer records for new customer
+	arm01_dev=fnget_dev("ARM_CUSTMAST")
+	dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
+	arm02_dev=fnget_dev("ARM_CUSTDET")
+	dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+	readrecord(arm01_dev,key=firm_id$+newCustomerId$,dom=*next)arm01a$
+	readrecord(arm02_dev,key=firm_id$+newCustomerId$+callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE"),dom=*next)arm02a$
+
+	rem --- Use new order defaults for new customer (see AVAL)
+	optInvHdr.ar_ship_via$=arm01a.ar_ship_via$
+	optInvHdr.shipping_id$=arm01a.shipping_id$
+	optInvHdr.shipping_email$=arm01a.shipping_email$
+	optInvHdr.slspsn_code$=arm02a.slspsn_code$
+	optInvHdr.terms_code$=arm02a.ar_terms_code$
+	optInvHdr.disc_code$=arm02a.disc_code$
+	optInvHdr.ar_dist_code$=arm02a.ar_dist_code$
+	optInvHdr.message_code$=arm02a.message_code$
+	optInvHdr.territory$=arm02a.territory$
+	optInvHdr.tax_code$=arm02a.tax_code$
+	optInvHdr.pricing_code$=arm02a.pricing_code$
+	optInvHdr.fob$=arm01a.fob$
+
+rem --- Update order detail records for new customer
+	round_precision = num(callpoint!.getDevObject("precision"))
+	hdr_total_sales=0
+
+	dim pc_files[6]
+	pc_files[1] = fnget_dev("IVM_ITEMMAST")
+	pc_files[2] = fnget_dev("IVM_ITEMWHSE")
+	pc_files[3] = fnget_dev("IVM_ITEMPRIC")
+	pc_files[4] = fnget_dev("IVC_PRICCODE")
+	pc_files[5] = fnget_dev("ARS_PARAMS")
+	pc_files[6] = fnget_dev("IVS_PARAMS")
+
+	ivm01_dev = fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+	ivm02_dev = fnget_dev("IVM_ITEMWHSE")
+	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+	opc_linecode_dev = fnget_dev("OPC_LINECODE")
+	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+
+	optInvDet_dev=fnget_dev("OPT_INVDET")
+	optInvDet_dev2=fnget_dev("2_OPT_INVDET")
+	dim optInvDet$:fnget_tpl$("OPT_INVDET")
+	read(optInvDet_dev,key=optInvHdrDev2_key$,dom=*next,knum="PRIMARY")
+	while 1
+		readrecord(optInvDet_dev,end=*break)optInvDet$
+		if pos(optInvHdrDev2_key$=optInvDet$)<>1 then break
+
+		rem --- Update order detail record for new customer
+		optInvDet.customer_id$=newCustomerId$
+
+		rem --- Re-print Picking List for new customer
+		optInvDet.pick_flag$="N"
+
+		rem ---Update order detail pricing for new customer
+		if recalcPriceDiscAmt then
+			rem --- Use calculated Unit Price for new customer
+			optInvDet.man_price$="N"
+
+			redim ivm01a$
+			findrecord(ivm01_dev,key=firm_id$+optInvDet.item_id$,dom=*next)ivm01a$
+			redim opc_linecode$
+			findrecord(opc_linecode_dev,key=firm_id$+optInvDet.line_code$,dom=*next)opc_linecode$
+			if pos(opc_linecode.line_type$="SP") and optInvDet.qty_ordered<>0 then
+				rem --- Do repricing (see OPE_ORDDET and OPE_ORDDET pricing subroutines)
+				qty_ord=optInvDet.qty_ordered
+				conv_factor=optInvDet.conv_factor
+				if conv_factor=0 then conv_factor=1
+
+
+				call stbl("+DIR_PGM")+"opc_pricing.aon",
+:					pc_files[all],
+:					firm_id$,
+:					optInvDet.warehouse_id$,
+:					optInvDet.item_id$,
+:					user_tpl.price_code$,
+:					newCustomerId$,
+:					optInvHdr.order_date$,
+:					optInvHdr.price_code$,
+:					qty_ord*conv_factor,
+:					typeflag$,
+:					price,
+:					disc,
+:					status
+
+				if status=0 then
+					optInvDet.unit_price=price
+					optInvDet.disc_percent=disc
+
+					if disc=100 then
+						redim ivm02a$
+						findrecord(ivm02_dev,key=firm_id$+optInvDet.warehouse_id$+optInvDet.item_id$,dom=*next)imv02a$
+						optInvDet.std_list_prc=ivm02a.cur_price
+					else
+						optInvDet.std_list_prc=round((price*100) / (100-disc), round_precision)
+					endif
+
+					optInvDet.ext_price=round(optInvDet.qty_shipped * price, 2)
+				endif
+			endif
+
+			rem --- Update order detail taxable_amt for new customer (see OPE_ORDDET AGRE)
+			if (opc_linecode.taxable_flag$ = "Y" and ( pos(opc_linecode.line_type$ = "OMN") or ivm01a.taxable_flag$ = "Y" )) or
+: 			callpoint!.getDevObject("use_tax_service")="Y" then
+				optInvDet.taxable_amt=optInvDet.ext_price
+			endif
+	
+			rem --- For uncommitted "O" line type sales (not quotes), move ext_price to unit_price until committed (see OPE_ORDDET AGRE)
+			if optInvHdr.invoice_type$<>"P" and optInvDet.commit_flag$="N" and opc_linecode.line_type$="O" and optInvDet.ext_price<>0 then
+				optInvDet.unit_price=optInvDet.ext_price
+				optInvDet.ext_price=0
+				optInvDet.taxable_amt=0
+			endif
+		endif
+
+		rem --- Sum total sales for order header
+		hdr_total_sales=hdr_total_sales+optInvDet.ext_price
+
+		rem --- Write order detail record for new customer
+		optInvDet.mod_user$=sysinfo.user_id$
+		optInvDet.mod_date$=date(0:"%Yd%Mz%Dz")
+		optInvDet.mod_time$=date(0:"%Hz%mz")
+		writerecord(optInvDet_dev2)optInvDet$
+	wend
+
+	rem --- Update order total_sales for new customer (see see INVOICE_TYPE AVAL)
+	optInvHdr.total_sales=hdr_total_sales
+
+	rem --- Update order discount_amt for new customer (see DISC_CODE AVAL)
+	if recalcPriceDiscAmt then
+		disccode_dev = fnget_dev("OPC_DISCCODE")
+		dim disccode_rec$:fnget_tpl$("OPC_DISCCODE")
+		find record (disccode_dev, key=firm_id$+optInvHdr.disc_code$, dom=*next) disccode_rec$
+		new_disc_amt = round(disccode_rec.disc_percent *hdr_total_sales/100, 2)
+		optInvHdr.discount_amt=new_disc_amt
+	endif
+
+	rem --- Force order sales tax re-calculation for new customer
+	rem --- Order taxable_amt and tax_amount are updated in ADIS when order is re-displayed for new customer
+	optInvHdr.no_sls_tax_calc=1
+
+	rem --- Write order header record for new customer
+	optInvHdr.mod_user$=sysinfo.user_id$
+	optInvHdr.mod_date$=date(0:"%Yd%Mz%Dz")
+	optInvHdr.mod_time$=date(0:"%Hz%mz")
+	writerecord(optInvHdr_dev2)optInvHdr$
+
+	rem --- Update OPE_ORDLSDET for new customer
+	ope21_dev = fnget_dev("OPE_ORDLSDET")
+	ope21_dev2=fnget_dev("2_OPE_ORDLSDET")
+	dim ope21a$:fnget_tpl$("OPE_ORDLSDET")
+	read (ope21_dev, key=optInvHdrDev2_key$, dom=*next)
+	while 1
+		readrecord(ope21_dev,end=*break)ope21a$
+		if pos(optInvHdrDev2_key$=ope21a$)<>1 then break
+
+		rem --- Update order lot/serial detail record for new customer
+		ope21a.customer_id$=newCustomerId$
+
+		rem --- Write order lot/serial detail record for new customer
+		ope21a.mod_user$=sysinfo.user_id$
+		ope21a.mod_date$=date(0:"%Yd%Mz%Dz")
+		ope21a.mod_time$=date(0:"%Hz%mz")
+		writerecord(ope21_dev2)ope21a$
+	wend
+
+	rem --- Update OPE_PRNTLIST for new customer
+	ope_prntlist_dev=fnget_dev("OPE_PRNTLIST")
+	dim ope_prntlist$:fnget_tpl$("OPE_PRNTLIST")
+	ope_prntlist.firm_id$=firm_id$
+	ope_prntlist.ordinv_flag$="O"
+	ope_prntlist.ar_type$="  "
+	ope_prntlist.customer_id$=newCustomerId$
+	ope_prntlist.order_no$=order_no$
+	ope_prntlist.no_sls_tax_calc=1
+	writerecord(ope_prntlist_dev)ope_prntlist$
+
+rem --- Remove temporary soft lock used just for this task 
+	if !callpoint!.isEditMode() and lock_type$="L" then
+		lock_type$="U"
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+	endif
+
+	rem --- Re-launch Order Entry form for the order with the new customer
+	rem --- In ADIS, re-calculate order sales tax for the new customer if callpoint!.getDevObject("RemoveThisRecord") is NOT blank
+	rem --- In ADIS, check the new customer's credit if callpoint!.getDevObject("RemoveThisRecord") is NOT blank
+	rem --- In ADIS, remove order records for the previous customer if callpoint!.getDevObject("RemoveThisRecord") is NOT blank
+	callpoint!.setDevObject("RemoveThisRecord",current_key$)
+	callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+newCustomerId$+order_no$+ar_inv_no$+"]")
+
 [[OPE_ORDHDR.AOPT-DINV]]
 rem --- Duplicate Historical Invoice
 
@@ -415,7 +776,7 @@ rem --- Create Order Acknowledgement/Confirmation (for doc queue, or manually em
 	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	ar_inv_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
 
-rem --- Make sure modified records are saved before printing
+rem --- Make sure modified records are saved before doing Acknowledgement
 	if pos("M"=callpoint!.getRecordStatus())
 		rem --- Add Barista soft lock for this record if not already in edit mode
 		if !callpoint!.isEditMode() then
@@ -448,7 +809,7 @@ rem --- Make sure modified records are saved before printing
 rem --- Refresh form with current data on disk that might have been updated elsewhere
 	callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+customer_id$+order_no$+ar_inv_no$+"]")
 
-rem --- Remove temporary soft lock used just for this print task 
+rem --- Remove temporary soft lock used just for this task 
 	if !callpoint!.isEditMode() and lock_type$="L" then
 		lock_type$="U"
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
@@ -675,6 +1036,8 @@ rem --- Enable buttons as appropriate
 			callpoint!.setOptionEnabled("WOLN",0)
 			callpoint!.setOptionEnabled("SHPT",0)
 			callpoint!.setOptionEnabled("RTAX",0)
+			callpoint!.setOptionEnabled("OACK",0)
+			callpoint!.setOptionEnabled("CUST",0)
 		else
 			callpoint!.setOptionEnabled("DINV",0)
 			callpoint!.setOptionEnabled("CINV",0)
@@ -685,6 +1048,7 @@ rem --- Enable buttons as appropriate
 			callpoint!.setOptionEnabled("SHPT",1)
 			callpoint!.setOptionEnabled("RTAX",1)
 			if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then callpoint!.setOptionEnabled("OACK",1)
+			callpoint!.setOptionEnabled("CUST",1)
 
 			op_create_wo$=callpoint!.getDevObject("op_create_wo")
 			if op_create_wo$="A" then
@@ -710,6 +1074,7 @@ rem --- Enable buttons as appropriate
 		callpoint!.setOptionEnabled("RPRT",0)
 		callpoint!.setOptionEnabled("RTAX",0)
 		callpoint!.setOptionEnabled("OACK",0)
+		callpoint!.setOptionEnabled("CUST",0)
 	endif
 
 rem --- Set Backordered text field
@@ -836,6 +1201,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("RTAX",0)
 	callpoint!.setOptionEnabled("AGNG",0)
 	callpoint!.setOptionEnabled("OACK",0)
+	callpoint!.setOptionEnabled("CUST",0)
 
 rem --- Clear order helper object
 
@@ -919,6 +1285,7 @@ rem --- Clear availability information
 	callpoint!.setDevObject("create_quote","S")
 	callpoint!.setDevObject("initial_rec_data$",rec_data$)
 	callpoint!.setDevObject("force_wolink_grid",0)
+	callpoint!.setDevObject("RemoveThisRecord","")
 
 	gosub init_msgs
 
@@ -1367,6 +1734,7 @@ rem --- Disable header buttons
 	callpoint!.setOptionEnabled("RTAX",0)
 	callpoint!.setOptionEnabled("AGNG",0)
 	callpoint!.setOptionEnabled("OACK",0)
+	callpoint!.setOptionEnabled("CUST",0)
 
 rem --- Capture current totals so we can tell later if they were changed in the grid
 
@@ -1485,24 +1853,6 @@ rem --- Is record deleted?
 		break; rem --- exit callpoint
 	endif
 
-rem --- Is flag down?
-
-	if !user_tpl.do_end_of_form then
-		user_tpl.do_end_of_form = 1
-		break; rem --- exit callpoint
-	endif	
-
-rem --- Credit action
-
-	rem --- Header record will exist if at least one detail line has been entered.
-	if GridVect!.getItem(0).size()>0 then
-		if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
-			callpoint!.setDevObject("cred_action_from_print_now","")
-			gosub do_credit_action
-			if action$<>"D" then callpoint!.setStatus("SAVE")
-		endif
-	endif
-
 rem --- Launch ope_createwos form to create selected work orders
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
@@ -1591,6 +1941,24 @@ rem --- Skip Acknowledgements for quotes
 		endif
 	endif
 
+rem --- Is flag down?
+
+	if !user_tpl.do_end_of_form then
+		user_tpl.do_end_of_form = 1
+		break; rem --- exit callpoint
+	endif	
+
+rem --- Credit action
+
+	rem --- Header record will exist if at least one detail line has been entered.
+	if GridVect!.getItem(0).size()>0 then
+		if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
+			callpoint!.setDevObject("cred_action_from_print_now","")
+			gosub do_credit_action
+			if action$<>"D" then callpoint!.setStatus("SAVE")
+		endif
+	endif
+
 [[OPE_ORDHDR.BSHO]]
 rem --- Documentation
 rem     Old s$(7,1) = 0 -> user_tpl.hist_ord$ = "Y" - order came from history
@@ -1598,7 +1966,7 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=44
+	num_files=46
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	
 	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -1642,6 +2010,8 @@ rem --- Open needed files
 	open_tables$[42]="OPT_INVHDR",open_opts$[42]="OTAN[2_]"
 	open_tables$[43]="OPT_SHIPTRACK",open_opts$[43]="OTA"
 	open_tables$[44]="ARM_CUSTPMTS",   open_opts$[44]="OTA"
+	open_tables$[45]="OPT_INVDET",open_opts$[45]="OTAN[2_]"
+	open_tables$[46]="OPE_ORDLSDET", open_opts$[46]="OTA[2_]"
 
 	gosub open_tables
 
@@ -1947,6 +2317,7 @@ rem --- Set up Lot/Serial button (and others) properly
 	callpoint!.setOptionEnabled("WOLN",0)
 	callpoint!.setOptionEnabled("AGNG",0)
 	callpoint!.setOptionEnabled("OACK",0)
+	callpoint!.setOptionEnabled("CUST",0)
 
 rem --- Parse table_chans$[all] into an object
 
@@ -3397,6 +3768,9 @@ rem ==========================================================================
 			dim ope11a$:fnget_tpl$("OPE_ORDDET")
 			ope11_dev=fnget_dev("OPE_ORDDET")
 
+			ope21_dev = fnget_dev("OPE_ORDLSDET")
+			dim ope21a$:fnget_tpl$("OPE_ORDLSDET")
+
 			ivm01_dev=fnget_dev("IVM_ITEMMAST")
 			dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 
@@ -3525,6 +3899,28 @@ rem ==========================================================================
 
 				ope11a$ = field(ope11a$)
 				write record (ope11_dev) ope11a$
+
+				rem --- Commit inventory for this new order
+				if ope11a.commit_flag$ ="Y" and pos(opc_linecode.line_type$="SP") then
+					wh_id$=ope11a.warehouse_id$
+					item_id$ =ope11a.item_id$
+					ls_id$=""
+					qty=ope11a.qty_ordered
+					gosub update_totals; rem --- do ATAMO for item
+
+					if pos(user_tpl.lotser_flag$="LS") then 
+						rem --- Process lotted/serialized items
+						read(ope21_dev,key=ope11_key$,dom=*next)
+						while 1
+							ope21_key$=key(ope21_dev,end=*break)
+							if pos(ope11_key$=ope21_key$)<>1 then break
+							readrecord(ope21_dev)ope21a$
+
+							ls_id$=ope21a.lotser_no$
+							gosub update_totals; rem --- do ATAMO for lot/serial
+						wend
+					endif
+				endif
 			wend
 			read(ope11_dev,knum="AO_STAT_CUST_ORD",dom=*next); rem --- reset key to OPE_ORDDET form's key
 
@@ -3829,7 +4225,7 @@ rem ==========================================================================
 
 rem ==========================================================================
 get_disk_rec: rem --- Get disk record, update with current form data
-              rem     OUT: record_found - true/false (1/0)
+              rem     OUT: found - true/false (1/0)
               rem          ordhdr_rec$, updated (if record found)
               rem          ordhdr_dev
 rem ==========================================================================
@@ -3843,7 +4239,6 @@ rem ==========================================================================
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	invoice_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
-	record_found = 0
 
 	found = 0
 	extract record (ordhdr_dev, key=firm_id$+trans_status$+"  "+cust_id$+order_no$+invoice_no$, dom=*next) ordhdr_rec$; found = 1; rem Advisory Locking
@@ -3919,7 +4314,7 @@ rem ==========================================================================
 	gosub usingTaxService
 
 	if eventFrom$="OPE_ORDHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 and 
-:		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.ADIS:OPE_ORDHDR.BWAR")))
+:		(isTotalsTab or pos(eventFrom$="OPE_ORDHDR.ADIS:OPE_ORDHDR.BWAR")))
 
 		rem --- Get current form data for tax calculation
 		ordhdr_dev=fnget_dev("OPE_ORDHDR")

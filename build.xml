@@ -196,7 +196,9 @@
                             user.build.properties.default,
                             user.build.properties,
                             basis.build.properties,
-                            InstallResponse.properties,
+                            certificate.bls,
+                            
+                            .properties,
                             config/barista.syn.example"/>
               <fileset file="${src.dir.aon}/${doc.dir}/readme.htm"/>
               <fileset file="${src.dir.aon}/${doc.dir}/relnotes.htm"/>
@@ -206,7 +208,7 @@
         <echo message="WriteConfigurationFiles -cdstore -barista -addon"/>
         <echo message="  basedir: ${basedir}"/>
         <echo message="  install.dir: ${install.dir}"/>
-        <java classname="com.basis.install.IS.WriteConfigurationFiles" dir="${basedir}" fork="true">
+        <java classname="com.basis.install.util.WriteConfigurationFiles" dir="${basedir}" fork="true">
             <classpath refid="path.install.WriteConfigFiles"/>
             <arg value="${install.dir}"/>
             <arg value="-cdstore"/>
@@ -256,6 +258,7 @@
                             user.build.properties.default,
                             user.build.properties,
                             basis.build.properties,
+                            certificate.bls,
                             InstallResponse.properties,
                             config/barista.syn.example"/>
         </copy>
@@ -519,7 +522,13 @@
             <fileset dir="${work.dir}"
                      includes="install.xml,
                                com/basis/,
+                               com/google/common/base/,
+                               com/google/common/collect/,
+                               com/google/common/util/,
                                com/google/gson/,
+                               com/typesafe/config/,
+                               io/netty/,
+                               org/json/,
                                javax/xml/,
                                org/apache/commons/io/,
                                org/bouncycastle/,
