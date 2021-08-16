@@ -61,6 +61,9 @@ rem --- Warn if Picking List has already been printed
 	endif
 
 [[OPE_CUSTCHNG.ASVA]]
+rem --- Capture if item prices and order Discount Amount are to be recalculated
+	callpoint!.setDevObject("recalcPriceDiscAmt",callpoint!.getColumnData("OPE_CUSTCHNG.RECALCULATE"))
+
 rem --- Capture the new customer_id to use
 	callpoint!.setDevObject("newCustomerId",callpoint!.getColumnData("OPE_CUSTCHNG.NEW_CUSTOMER_ID"))
 
